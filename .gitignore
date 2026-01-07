@@ -1,4 +1,4 @@
-/ai/*/*
+/app/ai/*/*
 /app/data/*
 /app/debug/*
 /app/errors/*
