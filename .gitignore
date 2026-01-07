@@ -1,0 +1,10 @@
+/ai/*/*
+/app/data/*
+/app/debug/*
+/app/errors/*
+/app/config/.env
+/core/database/logs/*
+/vendor/*/*
+.cursor/rules/*
+core/database/db-structure.sql
+.DS_Store
