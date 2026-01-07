@@ -345,9 +345,42 @@
                         <!-- Config Form -->
                         <div class="space-y-8">
                             
+                            <!-- Access Mode Section -->
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+                                <h3 class="text-sm font-bold text-slate-900 mb-3">Access Mode</h3>
+                                <p class="text-xs text-slate-500 mb-4">Choose how Groundskeeper connects to GitHub</p>
+
+                                <div class="space-y-4">
+                                    <!-- Read-only Mode -->
+                                    <label class="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-white <?php echo (!isset($glob['user']) || $glob['user']['access_mode'] === 'readonly') ? 'bg-white ring-2 ring-emerald-500' : 'bg-slate-50'; ?>">
+                                        <input type="radio" name="access_mode" value="readonly" class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300" <?php echo (!isset($glob['user']) || $glob['user']['access_mode'] === 'readonly') ? 'checked' : ''; ?> onchange="toggleConnectionSection('readonly')">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-medium text-slate-900">Read-only</span>
+                                                <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Recommended</span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">View and analyze issues without GitHub org approval. Uses Personal Access Token or public API (60 requests/hour).</p>
+                                        </div>
+                                    </label>
+
+                                    <!-- Read/Write Mode -->
+                                    <label class="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-white <?php echo (isset($glob['user']) && $glob['user']['access_mode'] === 'readwrite') ? 'bg-white ring-2 ring-emerald-500' : 'bg-slate-50'; ?>">
+                                        <input type="radio" name="access_mode" value="readwrite" class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300" <?php echo (isset($glob['user']) && $glob['user']['access_mode'] === 'readwrite') ? 'checked' : ''; ?> onchange="toggleConnectionSection('readwrite')">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-medium text-slate-900">Read/Write</span>
+                                                <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Requires OAuth</span>
+                                            </div>
+                                            <p class="text-xs text-slate-600">Full access to close issues, add labels, and post comments. Requires org admin approval for OAuth app.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Auth Section -->
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                 <h3 class="text-sm font-bold text-slate-900 mb-2">GitHub Connection</h3>
+
                                 <?php if (isset($glob['user']) && $glob['user']): ?>
                                     <!-- Connected state -->
                                     <div class="flex items-center gap-3 mb-4">
@@ -355,20 +388,67 @@
                                             <img src="<?php echo htmlspecialchars($glob['user']['avatar_url']); ?>" alt="Avatar" class="w-10 h-10 rounded-full">
                                         <?php endif; ?>
                                         <div>
-                                            <p class="text-sm text-slate-600">Authenticated via OAuth as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong>.</p>
+                                            <?php if ($glob['user']['access_mode'] === 'readwrite'): ?>
+                                                <p class="text-sm text-slate-600">Connected via OAuth as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
+                                                <p class="text-xs text-emerald-600 mt-1"><i class="fa-solid fa-check-circle"></i> Full read/write access</p>
+                                            <?php else: ?>
+                                                <p class="text-sm text-slate-600">Connected as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
+                                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-eye"></i> Read-only access</p>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                     <div class="flex gap-3">
-                                        <a href="<?php echo BASEURL; ?>auth/github" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Re-authenticate</a>
+                                        <?php if ($glob['user']['access_mode'] === 'readwrite'): ?>
+                                            <a href="<?php echo BASEURL; ?>auth/github" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Re-authenticate</a>
+                                        <?php else: ?>
+                                            <button onclick="document.getElementById('pat-form').classList.toggle('hidden')" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Update Token</button>
+                                        <?php endif; ?>
                                         <a href="<?php echo BASEURL; ?>settings/disconnect" class="text-sm text-red-600 border border-red-200 bg-white px-3 py-1.5 rounded hover:bg-red-50">Disconnect</a>
                                     </div>
+
+                                    <!-- PAT Update Form (hidden by default) -->
+                                    <?php if ($glob['user']['access_mode'] === 'readonly'): ?>
+                                    <div id="pat-form" class="hidden mt-4 pt-4 border-t border-slate-200">
+                                        <form method="POST" action="<?php echo BASEURL; ?>settings/update-token">
+                                            <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token</label>
+                                            <input type="text" name="personal_access_token" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="ghp_xxxxxxxxxxxx">
+                                            <p class="text-xs text-slate-500 mt-2">Update your PAT to increase rate limits (5000 req/hr)</p>
+                                            <button type="submit" class="mt-3 bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-emerald-700">Update Token</button>
+                                        </form>
+                                    </div>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <!-- Not connected state -->
-                                    <p class="text-sm text-slate-600 mb-4">Connect your GitHub account to start managing issues.</p>
-                                    <a href="<?php echo BASEURL; ?>auth/github" class="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800">
-                                        <i class="fa-brands fa-github"></i>
-                                        Sign in with GitHub
-                                    </a>
+                                    <p class="text-sm text-slate-600 mb-4">Connect your GitHub account to start analyzing issues.</p>
+
+                                    <!-- Read-only connection form -->
+                                    <div id="readonly-connection" class="<?php echo (!isset($glob['user']) || (isset($_POST['access_mode']) && $_POST['access_mode'] === 'readwrite')) ? 'hidden' : ''; ?>">
+                                        <form method="POST" action="<?php echo BASEURL; ?>settings/connect-readonly" class="space-y-3">
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-700 mb-2">GitHub Username</label>
+                                                <input type="text" name="github_username" required class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="your-github-username">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token (optional)</label>
+                                                <input type="text" name="personal_access_token" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="ghp_xxxxxxxxxxxx">
+                                                <p class="text-xs text-slate-500 mt-1">Without token: 60 requests/hour. With token: 5000 requests/hour. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Groundskeeper" target="_blank" class="text-emerald-600 hover:underline">Create token</a></p>
+                                            </div>
+                                            <button type="submit" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">
+                                                <i class="fa-solid fa-eye"></i>
+                                                Connect (Read-only)
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Read/Write OAuth connection -->
+                                    <div id="readwrite-connection" class="hidden">
+                                        <p class="text-xs text-slate-500 mb-3">Connect with GitHub OAuth for full read/write access:</p>
+                                        <a href="<?php echo BASEURL; ?>auth/github" class="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800">
+                                            <i class="fa-brands fa-github"></i>
+                                            Sign in with GitHub OAuth
+                                        </a>
+                                        <p class="text-xs text-slate-500 mt-3"><i class="fa-solid fa-info-circle"></i> Requires org admin approval for OAuth app</p>
+                                    </div>
                                 <?php endif; ?>
                             </div>
 
@@ -1292,6 +1372,28 @@
             document.getElementById('stat-missing-info').innerText = originalStats.missing;
             document.getElementById('stat-suggestions').innerText = originalStats.suggestions;
         }
+
+        // Toggle connection section based on access mode
+        function toggleConnectionSection(mode) {
+            const readonlySection = document.getElementById('readonly-connection');
+            const readwriteSection = document.getElementById('readwrite-connection');
+
+            if (mode === 'readonly') {
+                if (readonlySection) readonlySection.classList.remove('hidden');
+                if (readwriteSection) readwriteSection.classList.add('hidden');
+            } else if (mode === 'readwrite') {
+                if (readonlySection) readonlySection.classList.add('hidden');
+                if (readwriteSection) readwriteSection.classList.remove('hidden');
+            }
+        }
+
+        // Set initial state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedMode = document.querySelector('input[name="access_mode"]:checked');
+            if (selectedMode) {
+                toggleConnectionSection(selectedMode.value);
+            }
+        });
     </script>
 </body>
 </html>

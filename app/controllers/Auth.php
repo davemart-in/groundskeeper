@@ -33,25 +33,23 @@ if ($segment1 === 'github' && $segment2 === '') {
 
 // Route: /auth/github/callback - Handle OAuth callback
 if ($segment1 === 'github' && $segment2 === 'callback') {
+    // Check for errors from GitHub
+    if (isset($_GET['error'])) {
+        $_SESSION['error'] = 'GitHub authorization failed: ' . $_GET['error'];
+        redirect('');
+        exit;
+    }
+
+    $code = $_GET['code'] ?? null;
+    $state = $_GET['state'] ?? null;
+
+    if (!$code || !$state) {
+        $_SESSION['error'] = 'Invalid OAuth callback parameters';
+        redirect('');
+        exit;
+    }
+
     try {
-        // Check for errors from GitHub
-        if (isset($_GET['error'])) {
-            $_SESSION['error'] = 'GitHub authorization failed: ' . $_GET['error'];
-            redirect('');
-            exit;
-        }
-
-        // Verify we have a code
-        if (!isset($_GET['code']) || !isset($_GET['state'])) {
-            $_SESSION['error'] = 'Invalid OAuth callback parameters';
-            redirect('');
-            exit;
-        }
-
-        $code = $_GET['code'];
-        $state = $_GET['state'];
-
-        // Initialize OAuth
         $oauth = new GitHubOAuth();
 
         // Verify CSRF state token
@@ -63,49 +61,38 @@ if ($segment1 === 'github' && $segment2 === 'callback') {
 
         // Exchange code for access token
         $accessToken = $oauth->getAccessToken($code);
-
         if (!$accessToken) {
-            $_SESSION['error'] = 'Failed to obtain access token from GitHub';
-            redirect('');
-            exit;
+            throw new Exception('Failed to obtain access token');
         }
 
         // Get user info from GitHub
         $userInfo = $oauth->getUserInfo($accessToken);
-
         if (!$userInfo) {
-            $_SESSION['error'] = 'Failed to get user information from GitHub';
-            redirect('');
-            exit;
+            throw new Exception('Failed to get user information');
         }
 
-        // Check if user exists
+        // Create or update user
         $userModel = new User();
-        $user = $userModel->findByGitHubId($userInfo['github_id']);
+        $existingUser = $userModel->findByGitHubId($userInfo['github_id']);
 
-        if ($user) {
-            // Update existing user
-            $userModel->update($user->id, [
-                'github_username' => $userInfo['github_username'],
-                'github_access_token' => $accessToken,
-                'avatar_url' => $userInfo['avatar_url']
-            ]);
+        $userData = [
+            'github_username' => $userInfo['github_username'],
+            'github_access_token' => $accessToken,
+            'avatar_url' => $userInfo['avatar_url'],
+            'access_mode' => 'readwrite'
+        ];
 
-            $userId = $user->id;
+        if ($existingUser) {
+            $userModel->update($existingUser->id, $userData);
+            $userId = $existingUser->id;
         } else {
-            // Create new user
-            $userInfo['github_access_token'] = $accessToken;
-            $newUser = $userModel->create($userInfo);
+            $userData['github_id'] = $userInfo['github_id'];
+            $newUser = $userModel->create($userData);
             $userId = $newUser->id;
         }
 
-        // Store user ID in session
         $_SESSION['user_id'] = $userId;
-
-        // Success message
         $_SESSION['success'] = 'Successfully connected to GitHub!';
-
-        // Redirect to settings
         redirect('settings');
         exit;
 

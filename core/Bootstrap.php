@@ -71,6 +71,9 @@ $hashid = new Hashids\Hashids();
 /* GITHUB OAUTH ------------------------------------------- */
 require_once(COREPATH.'libraries/GitHubOAuth.php');
 
+/* GITHUB API ------------------------------------------- */
+require_once(COREPATH.'libraries/GitHubAPI.php');
+
 /* MODELS ------------------------------------------- */
 require_once(APPPATH.'models/User.php');
 
