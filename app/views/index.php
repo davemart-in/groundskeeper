@@ -336,10 +336,17 @@
                                 <h2 class="text-xl font-bold text-slate-900">woocommerce/woocommerce</h2>
                                 <p class="text-sm text-slate-500">Manage how Groundskeeper interacts with this repo.</p>
                             </div>
-                            <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
-                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                Connected
-                            </div>
+                            <?php if (isset($glob['user']) && $glob['user']): ?>
+                                <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    Connected
+                                </div>
+                            <?php else: ?>
+                                <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
+                                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                    Disconnected
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Config Form -->
