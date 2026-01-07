@@ -11,6 +11,12 @@ $glob = array();
 /* LOCAL FILE MANIPULATION ------------------------------------------- */
 require_once(COREPATH.'libraries/File.php');
 
+/* DATABASE ------------------------------------------- */
+require_once(COREPATH.'libraries/Database.php');
+
+/* ENCRYPTION ------------------------------------------- */
+require_once(COREPATH.'libraries/Encryption.php');
+
 /* ERROR TRACKING ------------------------------------------- */
 require_once(COREPATH.'libraries/Error.php');
 // Set default error function for PHP
@@ -61,6 +67,12 @@ require_once(APPPATH.'email/templates.php');
 require_once(COREPATH.'libraries/hashid/HashGenerator.php');
 require_once(COREPATH.'libraries/hashid/Hashid.php');
 $hashid = new Hashids\Hashids();
+
+/* GITHUB OAUTH ------------------------------------------- */
+require_once(COREPATH.'libraries/GitHubOAuth.php');
+
+/* MODELS ------------------------------------------- */
+require_once(APPPATH.'models/User.php');
 
 /* ROUTER ------------------------------------------- */
 require_once(COREPATH.'libraries/Router.php');

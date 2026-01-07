@@ -120,3 +120,32 @@ function username_blacklist_check($username) {
 	}
 	return false;
 }
+
+/**
+ * Check if user is authenticated
+ *
+ * @return bool True if user is logged in
+ */
+function isAuthenticated() {
+	return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+/**
+ * Require authentication (redirect to home if not authenticated)
+ *
+ * @param string $redirectTo URL to redirect to if not authenticated
+ */
+function requireAuth($redirectTo = '') {
+	if (!isAuthenticated()) {
+		redirect($redirectTo, 'You must be logged in to access this page.');
+	}
+}
+
+/**
+ * Get current authenticated user
+ *
+ * @return User|null Current user or null if not authenticated
+ */
+function getCurrentUser() {
+	return User::getCurrentUser();
+}

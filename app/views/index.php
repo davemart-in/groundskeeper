@@ -348,11 +348,28 @@
                             <!-- Auth Section -->
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                 <h3 class="text-sm font-bold text-slate-900 mb-2">GitHub Connection</h3>
-                                <p class="text-sm text-slate-600 mb-4">Authenticated via OAuth as <strong>@automattic_admin</strong>.</p>
-                                <div class="flex gap-3">
-                                    <button class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Re-authenticate</button>
-                                    <button class="text-sm text-red-600 border border-red-200 bg-white px-3 py-1.5 rounded hover:bg-red-50">Disconnect</button>
-                                </div>
+                                <?php if (isset($glob['user']) && $glob['user']): ?>
+                                    <!-- Connected state -->
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <?php if (!empty($glob['user']['avatar_url'])): ?>
+                                            <img src="<?php echo htmlspecialchars($glob['user']['avatar_url']); ?>" alt="Avatar" class="w-10 h-10 rounded-full">
+                                        <?php endif; ?>
+                                        <div>
+                                            <p class="text-sm text-slate-600">Authenticated via OAuth as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong>.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <a href="<?php echo BASEURL; ?>auth/github" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Re-authenticate</a>
+                                        <a href="<?php echo BASEURL; ?>settings/disconnect" class="text-sm text-red-600 border border-red-200 bg-white px-3 py-1.5 rounded hover:bg-red-50">Disconnect</a>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Not connected state -->
+                                    <p class="text-sm text-slate-600 mb-4">Connect your GitHub account to start managing issues.</p>
+                                    <a href="<?php echo BASEURL; ?>auth/github" class="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800">
+                                        <i class="fa-brands fa-github"></i>
+                                        Sign in with GitHub
+                                    </a>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Labels Section -->
