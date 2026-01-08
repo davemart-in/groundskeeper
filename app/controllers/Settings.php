@@ -251,6 +251,14 @@ if (is_numeric($segment1)) {
 
 $glob['selected_repo'] = $selectedRepo;
 
+// Load issues for selected repo
+if ($selectedRepo) {
+    $issueModel = new Issue();
+    $glob['issues'] = $issueModel->findByRepository($selectedRepo['id']);
+} else {
+    $glob['issues'] = [];
+}
+
 // Pass user data to view
 $glob['user'] = $user ? $user->toArray() : null;
 

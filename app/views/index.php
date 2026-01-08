@@ -96,6 +96,9 @@
                             <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAuditLoading()">
                                 <button type="submit" class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
                             </form>
+                            <form method="POST" action="<?php echo BASEURL; ?>analyze/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAnalyzeLoading()">
+                                <button type="submit" class="text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 px-2 py-0.5 rounded bg-blue-50"><i class="fa-solid fa-chart-line mr-1"></i> Re-analyze</button>
+                            </form>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -117,11 +120,15 @@
                                 <i class="fa-solid fa-layer-group text-xl"></i>
                             </div>
                             <div>
-                                <h4 class="text-2xl font-bold text-slate-900" id="stat-total">907</h4>
+                                <h4 class="text-2xl font-bold text-slate-900" id="stat-total"><?php echo count($glob['issues']); ?></h4>
                                 <p class="text-sm text-slate-500">Total open bugs</p>
                             </div>
                         </div>
-                        <a href="https://github.com/woocommerce/woocommerce/issues" target="_blank" class="text-sm text-slate-400 hover:text-slate-600"><i class="fa-brands fa-github mr-1"></i> View on GitHub</a>
+                        <?php if (isset($glob['selected_repo'])): ?>
+                            <a href="https://github.com/<?php echo htmlspecialchars($glob['selected_repo']['owner']); ?>/<?php echo htmlspecialchars($glob['selected_repo']['name']); ?>/issues?q=is%3Aissue%20state%3Aopen%20label%3A<?php echo urlencode($glob['selected_repo']['bug_label']); ?>" target="_blank" class="text-sm text-slate-400 hover:text-slate-600"><i class="fa-brands fa-github mr-1"></i> View on GitHub</a>
+                        <?php else: ?>
+                            <a href="#" class="text-sm text-slate-400 hover:text-slate-600"><i class="fa-brands fa-github mr-1"></i> View on GitHub</a>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Action Card: High Signal -->
@@ -1368,9 +1375,9 @@
             btn.textContent = isHidden ? 'Show less' : 'Show all';
         }
 
-        // Simulating filtered data since there's no backend
+        // Store original stats from actual data
         const originalStats = {
-            total: 907,
+            total: <?php echo count($glob['issues']); ?>,
             highSignal: 31,
             duplicates: 47,
             cleanup: 83,
@@ -1457,11 +1464,9 @@
             toast.textContent = message;
 
             if (isError) {
-                toast.classList.add('bg-red-500');
-                toast.classList.remove('bg-emerald-600');
+                toast.classList.add('error');
             } else {
-                toast.classList.add('bg-emerald-600');
-                toast.classList.remove('bg-red-500');
+                toast.classList.remove('error');
             }
 
             toast.classList.add('show');
@@ -1477,6 +1482,13 @@
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
         }
+
+        // Show loading overlay for analyze
+        function showAnalyzeLoading() {
+            const overlay = document.getElementById('analyze-loading');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
     </script>
 
     <!-- Toast Notification -->
@@ -1488,6 +1500,15 @@
             <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">Running Audit...</h3>
             <p class="text-sm text-slate-600">Importing issues from GitHub</p>
+        </div>
+    </div>
+
+    <!-- Analyze Loading Overlay -->
+    <div id="analyze-loading" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 shadow-xl text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-slate-900 mb-2">Analyzing Issues...</h3>
+            <p class="text-sm text-slate-600">Processing bug reports</p>
         </div>
     </div>
 </body>

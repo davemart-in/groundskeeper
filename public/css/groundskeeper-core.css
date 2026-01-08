@@ -64,10 +64,6 @@ body.font-size-large #terminal-text {
 	opacity: 1;
 }
 
-.alert.bg-red-500 {
+.alert.error {
 	border-color: #ef4444;
-}
-
-.alert.bg-emerald-600 {
-	border-color: #059669;
 }
