@@ -44,12 +44,12 @@
                         <span class="font-bold text-slate-900 text-lg tracking-tight">Groundskeeper <span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1 border border-slate-200">v0.1</span></span>
                     </div>
                     <div class="hidden sm:-my-px sm:flex sm:space-x-8">
-                        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="border-emerald-500 text-slate-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="<?php echo BASEURL; ?>" id="tab-dashboard" class="<?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'border-emerald-500 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'; ?> inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Dashboard
-                        </button>
-                        <button onclick="switchTab('settings')" id="tab-settings" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        </a>
+                        <a href="<?php echo BASEURL; ?>settings" id="tab-settings" class="<?php echo (isset($glob['active_tab']) && $glob['active_tab'] === 'settings') ? 'border-emerald-500 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'; ?> inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Settings
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -60,7 +60,7 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 relative">
 
         <!-- DASHBOARD TAB -->
-        <div id="view-dashboard" class="space-y-6 animate-fade-in">
+        <div id="view-dashboard" class="space-y-6 animate-fade-in <?php echo (isset($glob['active_tab']) && $glob['active_tab'] === 'settings') ? 'hidden' : ''; ?>">
             
             <!-- Dashboard Controls -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
@@ -305,7 +305,7 @@
         </div>
 
         <!-- SETTINGS TAB -->
-        <div id="view-settings" class="hidden animate-fade-in h-[calc(100vh-140px)]">
+        <div id="view-settings" class="<?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'hidden' : ''; ?> animate-fade-in h-[calc(100vh-140px)]">
             <div class="flex h-full bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                 
                 <!-- Sidebar -->
@@ -316,42 +316,63 @@
                     </div>
                     <div class="flex-1 overflow-y-auto">
                         <nav class="space-y-1 p-2">
-                            <a href="#" class="bg-white border border-slate-200 text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md shadow-sm">
-                                <i class="fa-brands fa-github text-slate-400 mr-3"></i>
-                                <span class="truncate">woocommerce/woocommerce</span>
-                            </a>
-                            <a href="#" class="text-slate-600 hover:bg-slate-100 hover:text-slate-900 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                                <i class="fa-brands fa-github text-slate-400 mr-3"></i>
-                                <span class="truncate">automattic/jetpack</span>
-                            </a>
+                            <?php if (!empty($glob['repositories'])): ?>
+                                <?php foreach ($glob['repositories'] as $repo): ?>
+                                    <a href="<?php echo BASEURL; ?>settings/<?php echo $repo['id']; ?>" class="<?php echo (isset($glob['selected_repo']) && $glob['selected_repo']['id'] === $repo['id']) ? 'bg-white border border-slate-200 text-slate-900 shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'; ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                                        <i class="fa-brands fa-github text-slate-400 mr-3"></i>
+                                        <span class="truncate"><?php echo htmlspecialchars($repo['full_name']); ?></span>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="p-4 text-center text-slate-400 text-xs">
+                                    No repositories yet
+                                </div>
+                            <?php endif; ?>
                         </nav>
                     </div>
                 </div>
 
                 <!-- Content -->
-                <div class="flex-1 overflow-y-auto p-8">
+                <div class="flex-1 overflow-y-auto p-8 <?php echo (empty($glob['repositories']) || !isset($glob['selected_repo'])) ? 'flex items-center justify-center' : ''; ?>">
+                    <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                     <div class="max-w-2xl">
-                        <div class="flex justify-between items-start mb-8">
-                            <div>
-                                <h2 class="text-xl font-bold text-slate-900">woocommerce/woocommerce</h2>
-                                <p class="text-sm text-slate-500">Manage how Groundskeeper interacts with this repo.</p>
+                            <!-- Repo selected - show header -->
+                            <div class="flex justify-between items-start mb-8">
+                                <div>
+                                    <h2 class="text-xl font-bold text-slate-900"><?php echo htmlspecialchars($glob['selected_repo']['full_name']); ?></h2>
+                                    <p class="text-sm text-slate-500">Manage how Groundskeeper interacts with this repo.</p>
+                                </div>
+                                <?php if (isset($glob['user']) && $glob['user']): ?>
+                                    <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        Connected
+                                    </div>
+                                <?php else: ?>
+                                    <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
+                                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                        Disconnected
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <?php if (isset($glob['user']) && $glob['user']): ?>
-                                <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
-                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                    Connected
+                        <?php else: ?>
+                            <!-- No repos - show blank slate -->
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fa-brands fa-github text-slate-400 text-2xl"></i>
                                 </div>
-                            <?php else: ?>
-                                <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
-                                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                                    Disconnected
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                                <h3 class="text-lg font-bold text-slate-900 mb-2">No repositories connected</h3>
+                                <p class="text-sm text-slate-500 mb-6">Add your first repository to start analyzing issues.</p>
+                                <button onclick="openModal('add-repo')" class="bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700">
+                                    <i class="fa-solid fa-plus mr-2"></i>
+                                    Add Your First Repository
+                                </button>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Config Form -->
                         <div class="space-y-8">
-                            
+
+                            <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                             <!-- Access Mode Section -->
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
                                 <h3 class="text-sm font-bold text-slate-900 mb-3">Access Mode</h3>
@@ -462,51 +483,51 @@
                             <!-- Labels Section -->
                             <div>
                                 <h3 class="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">Label Mapping</h3>
-                                
-                                <div class="grid gap-6">
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-2">Bug Label</label>
-                                        <p class="text-xs text-slate-500 mb-2">Which label indicates an issue is a bug?</p>
-                                        <select class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-white border">
-                                            <option>type: bug</option>
-                                            <option>bug</option>
-                                            <option>defect</option>
-                                        </select>
-                                    </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-2">Priority Labels</label>
-                                        <p class="text-xs text-slate-500 mb-2">Select all labels used to denote priority levels.</p>
-                                        <div class="space-y-2 max-h-40 overflow-y-auto border border-slate-200 rounded-md p-3 bg-white">
-                                            <label class="flex items-center">
-                                                <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                <span class="ml-2 text-sm text-slate-700">priority: critical</span>
-                                            </label>
-                                            <label class="flex items-center">
-                                                <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                <span class="ml-2 text-sm text-slate-700">priority: high</span>
-                                            </label>
-                                            <label class="flex items-center">
-                                                <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                <span class="ml-2 text-sm text-slate-700">priority: normal</span>
-                                            </label>
-                                            <label class="flex items-center">
-                                                <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                <span class="ml-2 text-sm text-slate-700">priority: low</span>
-                                            </label>
+                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/update">
+                                    <div class="grid gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-2">Bug Label</label>
+                                            <p class="text-xs text-slate-500 mb-2">Which label indicates an issue is a bug?</p>
+                                            <input type="text" name="bug_label" value="<?php echo htmlspecialchars($glob['selected_repo']['bug_label']); ?>" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-white border" placeholder="bug">
+                                            <p class="text-xs text-slate-500 mt-1">Examples: bug, type: bug, defect</p>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-700 mb-2">Priority Labels</label>
+                                            <p class="text-xs text-slate-500 mb-2">Select all labels used to denote priority levels.</p>
+                                            <div class="space-y-2 max-h-40 overflow-y-auto border border-slate-200 rounded-md p-3 bg-white">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
+                                                    <span class="ml-2 text-sm text-slate-700">priority: critical</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
+                                                    <span class="ml-2 text-sm text-slate-700">priority: high</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
+                                                    <span class="ml-2 text-sm text-slate-700">priority: normal</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
+                                                    <span class="ml-2 text-sm text-slate-700">priority: low</span>
+                                                </label>
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-2 italic">Priority label configuration coming soon</p>
                                         </div>
                                     </div>
-                                    
-                                    <!-- Team Members section removed -->
 
-                                </div>
+                                    <div class="pt-4 flex justify-end">
+                                        <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-700">Save Changes</button>
+                                    </div>
+                                </form>
                             </div>
-                            
-                            <div class="pt-4 flex justify-end">
-                                <button class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-700">Save Changes</button>
-                            </div>
+                            <?php endif; ?>
                         </div>
+                    <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -535,53 +556,40 @@
                     </div>
 
                     <!-- Content -->
-                    <div class="p-6 space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Repository Slug</label>
-                            <div class="relative rounded-md shadow-sm">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fa-brands fa-github text-slate-400"></i>
+                    <form method="POST" action="<?php echo BASEURL; ?>settings/add-repo">
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Repository Slug</label>
+                                <div class="relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fa-brands fa-github text-slate-400"></i>
+                                    </div>
+                                    <input type="text" name="repo_slug" required class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md border py-2" placeholder="owner/repo-name">
                                 </div>
-                                <input type="text" class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md border py-2" placeholder="owner/repo-name">
+                                <p class="mt-2 text-xs text-slate-500">Format: owner/repo-name (e.g., woocommerce/woocommerce)</p>
                             </div>
-                            <p class="mt-2 text-xs text-slate-500">You must have admin access to this repository.</p>
-                        </div>
 
-                        <div class="bg-slate-50 p-4 rounded border border-slate-200">
-                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Initial Configuration</h4>
-                            
-                            <div class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Initial Configuration</h4>
+
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700 mb-1">Bug Label</label>
-                                    <select class="block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-white border">
-                                        <option>type: bug</option>
-                                        <option>bug</option>
-                                        <option>defect</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-2">Priority Labels</label>
-                                    <div class="space-y-2">
-                                        <label class="flex items-center">
-                                            <input type="checkbox" checked class="h-4 w-4 text-emerald-600 border-slate-300 rounded">
-                                            <span class="ml-2 text-sm text-slate-600">Detect automatically from existing labels</span>
-                                        </label>
-                                    </div>
+                                    <input type="text" name="bug_label" value="bug" class="block w-full pl-3 pr-3 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-white border" placeholder="bug">
+                                    <p class="mt-1 text-xs text-slate-500">The label used to identify bugs in this repository</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Footer -->
-                    <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-200">
-                        <button type="button" onclick="closeModal('add-repo')" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                            Connect & Scan
-                        </button>
-                        <button type="button" onclick="closeModal('add-repo')" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Cancel
-                        </button>
-                    </div>
+                        <!-- Footer -->
+                        <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-200">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-emerald-600 text-base font-medium text-white hover:bg-emerald-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                                Load Repo
+                            </button>
+                            <button type="button" onclick="closeModal('add-repo')" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

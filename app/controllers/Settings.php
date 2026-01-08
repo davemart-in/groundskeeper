@@ -11,10 +11,12 @@ function validateToken($token) {
     return empty($token) || GitHubAPI::validateToken($token);
 }
 
-// Get current user
+// Get current user and models
 $user = User::getCurrentUser();
 $userModel = new User();
+$repoModel = new Repository();
 $segment1 = $glob['route'][1] ?? '';
+$segment2 = $glob['route'][2] ?? '';
 
 // Route: /settings/disconnect
 if ($segment1 === 'disconnect') {
@@ -86,10 +88,94 @@ if ($segment1 === 'update-token' && $_SERVER['REQUEST_METHOD'] === 'POST' && $us
     exit;
 }
 
+// Route: /settings/add-repo - Add new repository
+if ($segment1 === 'add-repo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $repoSlug = $_POST['repo_slug'] ?? '';
+    $bugLabel = $_POST['bug_label'] ?? 'bug';
+
+    $parsed = Repository::parseSlug($repoSlug);
+
+    if (!$parsed) {
+        $_SESSION['error'] = 'Invalid repository format. Use: owner/repo-name';
+        redirect('settings');
+        exit;
+    }
+
+    // Check if repo already exists
+    $existing = $repoModel->findByOwnerName($parsed['owner'], $parsed['name']);
+    if ($existing) {
+        $_SESSION['error'] = 'Repository already added';
+        redirect('settings/' . $existing['id']);
+        exit;
+    }
+
+    try {
+        $newRepo = $repoModel->create([
+            'owner' => $parsed['owner'],
+            'name' => $parsed['name'],
+            'bug_label' => $bugLabel
+        ]);
+
+        $_SESSION['success'] = 'Repository added successfully!';
+        redirect('settings/' . $newRepo['id']);
+    } catch (Exception $e) {
+        error_log('Add repo error: ' . $e->getMessage());
+        $_SESSION['error'] = 'Failed to add repository';
+        redirect('settings');
+    }
+    exit;
+}
+
+// Route: /settings/{repo_id}/update - Update repository settings
+if (is_numeric($segment1) && $segment2 === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $repoId = (int)$segment1;
+    $bugLabel = $_POST['bug_label'] ?? 'bug';
+
+    $repo = $repoModel->findById($repoId);
+    if (!$repo) {
+        $_SESSION['error'] = 'Repository not found';
+        redirect('settings');
+        exit;
+    }
+
+    try {
+        $repoModel->update($repoId, ['bug_label' => $bugLabel]);
+        $_SESSION['success'] = 'Settings updated successfully!';
+    } catch (Exception $e) {
+        error_log('Update repo error: ' . $e->getMessage());
+        $_SESSION['error'] = 'Failed to update settings';
+    }
+
+    redirect('settings/' . $repoId);
+    exit;
+}
+
+// Load repositories for sidebar
+$glob['repositories'] = $repoModel->findAll();
+
+// Determine selected repository
+$selectedRepo = null;
+if (is_numeric($segment1)) {
+    // Specific repo requested
+    $selectedRepo = $repoModel->findById((int)$segment1);
+    if (!$selectedRepo) {
+        $_SESSION['error'] = 'Repository not found';
+        redirect('settings');
+        exit;
+    }
+} elseif (!empty($glob['repositories'])) {
+    // Default to first repo
+    $selectedRepo = $glob['repositories'][0];
+}
+
+$glob['selected_repo'] = $selectedRepo;
+
 // Pass user data to view
 $glob['user'] = $user ? $user->toArray() : null;
 
-// Load view
-if (isset($glob['view'])) {
-    require_once($glob['view']);
-}
+// Set active tab to settings
+$glob['active_tab'] = 'settings';
+
+// Load the main index view (Settings is a tab within it)
+$glob['view'] = APPPATH.'views/index.php';
+require_once($glob['view']);
