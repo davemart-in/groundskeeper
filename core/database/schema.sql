@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS repositories (
     bug_label TEXT DEFAULT 'type: bug',
     priority_labels TEXT,
     last_synced_at INTEGER,
+    last_audited_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

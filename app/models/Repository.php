@@ -163,6 +163,7 @@ class Repository {
             'bug_label' => $row['bug_label'],
             'priority_labels' => $row['priority_labels'] ?? null,
             'last_synced_at' => $row['last_synced_at'],
+            'last_audited_at' => $row['last_audited_at'] ?? null,
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
         ];

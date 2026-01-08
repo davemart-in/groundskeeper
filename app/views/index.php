@@ -66,19 +66,36 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
                 <div class="relative w-full sm:w-80">
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Repository</label>
-                    <select class="block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-slate-50 border">
-                        <option>woocommerce/woocommerce</option>
-                        <option>automattic/jetpack</option>
-                    </select>
+                    <?php if (!empty($glob['repositories'])): ?>
+                        <select class="block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-slate-50 border">
+                            <?php foreach ($glob['repositories'] as $repo): ?>
+                                <option value="<?php echo $repo['id']; ?>"><?php echo htmlspecialchars($repo['full_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php else: ?>
+                        <div class="text-sm text-slate-500 py-2">
+                            No repositories connected. <a href="<?php echo BASEURL; ?>settings" class="text-emerald-600 hover:underline font-medium">Add a repository</a>
+                        </div>
+                    <?php endif; ?>
                 </div>
+                <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                 <div class="text-right">
                     <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Analysis Status</span>
-                    <div class="flex items-center gap-2 text-sm text-slate-700">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        Last audited Jan 6, 2026
-                        <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
-                    </div>
+                    <?php if (!$glob['selected_repo']['last_audited_at']): ?>
+                        <div class="flex items-center gap-2 text-sm text-slate-700">
+                            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                            Not yet audited
+                            <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
+                        </div>
+                    <?php else: ?>
+                        <div class="flex items-center gap-2 text-sm text-slate-700">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Last audited <?php echo date('M j, Y', $glob['selected_repo']['last_audited_at']); ?>
+                            <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
+                <?php endif; ?>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -194,7 +211,16 @@
                                 </div>
                                 <div>
                                     <h4 class="text-lg font-bold text-slate-900"><span id="stat-suggestions">544</span> Suggestions</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Recommended priority, status, and functionality label updates.</p>
+                                    <?php
+                                    $hasPriorityLabels = false;
+                                    if (isset($glob['selected_repo']['priority_labels']) && !empty($glob['selected_repo']['priority_labels'])) {
+                                        $priorityLabels = json_decode($glob['selected_repo']['priority_labels'], true);
+                                        $hasPriorityLabels = is_array($priorityLabels) && !empty($priorityLabels);
+                                    }
+                                    ?>
+                                    <p class="text-sm text-slate-500 mt-1">
+                                        <?php echo $hasPriorityLabels ? 'Recommended priority, status, and functionality label updates.' : 'Recommended status and functionality label updates.'; ?>
+                                    </p>
                                 </div>
                             </div>
                             <button onclick="openModal('suggestions')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
@@ -207,7 +233,8 @@
 
                 <!-- Right Column: Breakdowns -->
                 <div class="space-y-8">
-                    
+
+                    <?php if ($hasPriorityLabels): ?>
                     <!-- By Priority -->
                     <div>
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Issues by Priority</h3>
@@ -252,6 +279,7 @@
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                      <!-- By Functionality -->
                      <div>
