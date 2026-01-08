@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS repositories (
     name TEXT NOT NULL,
     full_name TEXT NOT NULL,
     bug_label TEXT DEFAULT 'type: bug',
+    priority_labels TEXT,
     last_synced_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,

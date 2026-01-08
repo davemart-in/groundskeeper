@@ -91,7 +91,6 @@ if ($segment1 === 'update-token' && $_SERVER['REQUEST_METHOD'] === 'POST' && $us
 // Route: /settings/add-repo - Add new repository
 if ($segment1 === 'add-repo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $repoSlug = $_POST['repo_slug'] ?? '';
-    $bugLabel = $_POST['bug_label'] ?? 'bug';
 
     $parsed = Repository::parseSlug($repoSlug);
 
@@ -110,10 +109,22 @@ if ($segment1 === 'add-repo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        // Auto-detect bug label from GitHub
+        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $githubApi = new GitHubAPI($githubToken);
+        $bugLabel = Repository::detectBugLabel($parsed['owner'], $parsed['name'], $githubApi);
+
+        // Create repository with detected bug label
         $newRepo = $repoModel->create([
             'owner' => $parsed['owner'],
             'name' => $parsed['name'],
             'bug_label' => $bugLabel
+        ]);
+
+        // Mark as synced
+        $repoModel->update($newRepo['id'], [
+            'priority_labels' => json_encode([]),
+            'last_synced_at' => time()
         ]);
 
         $_SESSION['success'] = 'Repository added successfully!';
@@ -139,7 +150,22 @@ if (is_numeric($segment1) && $segment2 === 'update' && $_SERVER['REQUEST_METHOD'
     }
 
     try {
-        $repoModel->update($repoId, ['bug_label' => $bugLabel]);
+        $updateData = ['bug_label' => $bugLabel];
+
+        // Handle priority labels from textarea
+        if (isset($_POST['priority_labels_text'])) {
+            $text = trim($_POST['priority_labels_text']);
+            if (!empty($text)) {
+                $lines = explode("\n", $text);
+                $labels = array_filter(array_map('trim', $lines));
+                $updateData['priority_labels'] = json_encode(array_values($labels));
+            } else {
+                // Empty textarea = no priority labels
+                $updateData['priority_labels'] = json_encode([]);
+            }
+        }
+
+        $repoModel->update($repoId, $updateData);
         $_SESSION['success'] = 'Settings updated successfully!';
     } catch (Exception $e) {
         error_log('Update repo error: ' . $e->getMessage());
@@ -147,6 +173,61 @@ if (is_numeric($segment1) && $segment2 === 'update' && $_SERVER['REQUEST_METHOD'
     }
 
     redirect('settings/' . $repoId);
+    exit;
+}
+
+// Route: /settings/{repo_id}/sync - Sync labels from GitHub
+if (is_numeric($segment1) && $segment2 === 'sync' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $repoId = (int)$segment1;
+
+    $repo = $repoModel->findById($repoId);
+    if (!$repo) {
+        $_SESSION['error'] = 'Repository not found';
+        redirect('settings');
+        exit;
+    }
+
+    try {
+        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $githubApi = new GitHubAPI($githubToken);
+        $bugLabel = Repository::detectBugLabel($repo['owner'], $repo['name'], $githubApi);
+
+        $repoModel->update($repoId, [
+            'bug_label' => $bugLabel,
+            'priority_labels' => json_encode([]),
+            'last_synced_at' => time()
+        ]);
+
+        $_SESSION['success'] = 'Labels detected successfully!';
+    } catch (Exception $e) {
+        error_log('Sync labels error: ' . $e->getMessage());
+        $_SESSION['error'] = 'Failed to detect labels';
+    }
+
+    redirect('settings/' . $repoId);
+    exit;
+}
+
+// Route: /settings/{repo_id}/delete - Delete repository
+if (is_numeric($segment1) && $segment2 === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $repoId = (int)$segment1;
+
+    $repo = $repoModel->findById($repoId);
+    if (!$repo) {
+        $_SESSION['error'] = 'Repository not found';
+        redirect('settings');
+        exit;
+    }
+
+    try {
+        $repoModel->delete($repoId);
+        $_SESSION['success'] = 'Repository removed successfully!';
+    } catch (Exception $e) {
+        error_log('Delete repo error: ' . $e->getMessage());
+        $_SESSION['error'] = 'Failed to remove repository';
+    }
+
+    redirect('settings');
     exit;
 }
 

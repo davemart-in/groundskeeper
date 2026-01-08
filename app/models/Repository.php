@@ -115,6 +115,11 @@ class Repository {
             $params[] = $data['bug_label'];
         }
 
+        if (isset($data['priority_labels'])) {
+            $updates[] = 'priority_labels = ?';
+            $params[] = $data['priority_labels'];
+        }
+
         if (isset($data['last_synced_at'])) {
             $updates[] = 'last_synced_at = ?';
             $params[] = $data['last_synced_at'];
@@ -156,6 +161,7 @@ class Repository {
             'name' => $row['name'],
             'full_name' => $row['full_name'],
             'bug_label' => $row['bug_label'],
+            'priority_labels' => $row['priority_labels'] ?? null,
             'last_synced_at' => $row['last_synced_at'],
             'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at']
@@ -187,5 +193,39 @@ class Repository {
             'owner' => $parts[0],
             'name' => $parts[1]
         ];
+    }
+
+    /**
+     * Auto-detect bug label from GitHub repository
+     *
+     * @param string $owner Repository owner
+     * @param string $name Repository name
+     * @param GitHubAPI $githubApi GitHub API instance
+     * @return string Detected bug label name
+     */
+    public static function detectBugLabel($owner, $name, $githubApi) {
+        $labels = $githubApi->getLabels($owner, $name);
+
+        if ($labels === false || empty($labels)) {
+            return 'bug';
+        }
+
+        // Extract label names
+        $labelNames = array_map(function($label) {
+            return $label['name'];
+        }, $labels);
+
+        // Detect bug label
+        $bugKeywords = ['bug', 'defect', '🐛', 'type: bug', 'kind: bug'];
+
+        foreach ($labelNames as $labelName) {
+            foreach ($bugKeywords as $keyword) {
+                if (stripos($labelName, $keyword) !== false) {
+                    return $labelName;
+                }
+            }
+        }
+
+        return 'bug'; // Default
     }
 }

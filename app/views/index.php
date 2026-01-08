@@ -338,21 +338,28 @@
                     <div class="max-w-2xl">
                             <!-- Repo selected - show header -->
                             <div class="flex justify-between items-start mb-8">
-                                <div>
-                                    <h2 class="text-xl font-bold text-slate-900"><?php echo htmlspecialchars($glob['selected_repo']['full_name']); ?></h2>
-                                    <p class="text-sm text-slate-500">Manage how Groundskeeper interacts with this repo.</p>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3">
+                                        <h2 class="text-xl font-bold text-slate-900"><?php echo htmlspecialchars($glob['selected_repo']['full_name']); ?></h2>
+                                        <?php if (isset($glob['user']) && $glob['user']): ?>
+                                            <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
+                                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                Connected
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
+                                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                                Disconnected
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="text-sm text-slate-500 mt-1">Manage how Groundskeeper interacts with this repo.</p>
                                 </div>
-                                <?php if (isset($glob['user']) && $glob['user']): ?>
-                                    <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
-                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                        Connected
-                                    </div>
-                                <?php else: ?>
-                                    <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
-                                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                                        Disconnected
-                                    </div>
-                                <?php endif; ?>
+                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/delete" onsubmit="return confirm('Are you sure you want to remove this repository?');">
+                                    <button type="submit" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                                        <i class="fa-solid fa-trash mr-1"></i> Remove
+                                    </button>
+                                </form>
                             </div>
                         <?php else: ?>
                             <!-- No repos - show blank slate -->
@@ -480,6 +487,9 @@
                                 <?php endif; ?>
                             </div>
 
+                            <?php endif; ?>
+
+                            <?php if (!empty($glob['repositories']) && isset($glob['selected_repo']) && $glob['selected_repo']['last_synced_at']): ?>
                             <!-- Labels Section -->
                             <div>
                                 <h3 class="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">Label Mapping</h3>
@@ -495,26 +505,20 @@
 
                                         <div>
                                             <label class="block text-sm font-medium text-slate-700 mb-2">Priority Labels</label>
-                                            <p class="text-xs text-slate-500 mb-2">Select all labels used to denote priority levels.</p>
-                                            <div class="space-y-2 max-h-40 overflow-y-auto border border-slate-200 rounded-md p-3 bg-white">
-                                                <label class="flex items-center">
-                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                    <span class="ml-2 text-sm text-slate-700">priority: critical</span>
-                                                </label>
-                                                <label class="flex items-center">
-                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                    <span class="ml-2 text-sm text-slate-700">priority: high</span>
-                                                </label>
-                                                <label class="flex items-center">
-                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                    <span class="ml-2 text-sm text-slate-700">priority: normal</span>
-                                                </label>
-                                                <label class="flex items-center">
-                                                    <input type="checkbox" checked class="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300 rounded">
-                                                    <span class="ml-2 text-sm text-slate-700">priority: low</span>
-                                                </label>
-                                            </div>
-                                            <p class="text-xs text-slate-500 mt-2 italic">Priority label configuration coming soon</p>
+                                            <p class="text-xs text-slate-500 mb-2">Enter labels used to denote priority levels, one per line.</p>
+
+                                            <?php
+                                            $priorityLabelsText = '';
+                                            if (!empty($glob['selected_repo']['priority_labels'])) {
+                                                $priorityLabels = json_decode($glob['selected_repo']['priority_labels'], true);
+                                                if (is_array($priorityLabels)) {
+                                                    $priorityLabelsText = implode("\n", $priorityLabels);
+                                                }
+                                            }
+                                            ?>
+
+                                            <textarea name="priority_labels_text" rows="4" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border focus:outline-none focus:ring-emerald-500 focus:border-emerald-500" placeholder="priority: high&#10;priority: medium&#10;priority: low"><?php echo htmlspecialchars($priorityLabelsText); ?></textarea>
+                                            <p class="text-xs text-slate-500 mt-1">Leave blank if this repository doesn't use priority labels.</p>
                                         </div>
                                     </div>
 
@@ -567,16 +571,6 @@
                                     <input type="text" name="repo_slug" required class="focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md border py-2" placeholder="owner/repo-name">
                                 </div>
                                 <p class="mt-2 text-xs text-slate-500">Format: owner/repo-name (e.g., woocommerce/woocommerce)</p>
-                            </div>
-
-                            <div class="bg-slate-50 p-4 rounded border border-slate-200">
-                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Initial Configuration</h4>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Bug Label</label>
-                                    <input type="text" name="bug_label" value="bug" class="block w-full pl-3 pr-3 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-white border" placeholder="bug">
-                                    <p class="mt-1 text-xs text-slate-500">The label used to identify bugs in this repository</p>
-                                </div>
                             </div>
                         </div>
 

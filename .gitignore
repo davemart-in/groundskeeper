@@ -4,6 +4,7 @@
 /app/errors/*
 /app/config/.env
 /core/database/logs/*
+/core/database/groundskeeper.sqlite
 /vendor/*/*
 .cursor/rules/*
 core/database/db-structure.sql

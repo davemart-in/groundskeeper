@@ -176,6 +176,52 @@ class GitHubAPI {
     }
 
     /**
+     * Get all labels for a repository
+     *
+     * @param string $owner Repository owner
+     * @param string $repo Repository name
+     * @return array|false Array of labels or false on failure
+     */
+    public function getLabels($owner, $repo) {
+        $labels = [];
+        $page = 1;
+        $perPage = 100;
+
+        do {
+            $endpoint = "/repos/{$owner}/{$repo}/labels";
+            $params = [
+                'per_page' => $perPage,
+                'page' => $page
+            ];
+
+            $pageLabels = $this->get($endpoint, $params);
+
+            if ($pageLabels === false) {
+                error_log("Failed to fetch labels page {$page} for {$owner}/{$repo}");
+                break;
+            }
+
+            $labels = array_merge($labels, $pageLabels);
+
+            // If we got less than perPage, we're done
+            if (count($pageLabels) < $perPage) {
+                break;
+            }
+
+            $page++;
+
+            // Safety limit
+            if ($page > 10) {
+                error_log("GitHub API: Hit page limit for labels in {$owner}/{$repo}");
+                break;
+            }
+
+        } while (true);
+
+        return $labels;
+    }
+
+    /**
      * Validate a Personal Access Token
      *
      * @param string $token Token to validate
