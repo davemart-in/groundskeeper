@@ -77,6 +77,7 @@ require_once(COREPATH.'libraries/GitHubAPI.php');
 /* MODELS ------------------------------------------- */
 require_once(APPPATH.'models/User.php');
 require_once(APPPATH.'models/Repository.php');
+require_once(APPPATH.'models/Issue.php');
 
 /* ROUTER ------------------------------------------- */
 require_once(COREPATH.'libraries/Router.php');

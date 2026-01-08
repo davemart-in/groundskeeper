@@ -85,13 +85,17 @@
                         <div class="flex items-center gap-2 text-sm text-slate-700">
                             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
                             Not yet audited
-                            <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
+                            <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAuditLoading()">
+                                <button type="submit" class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
+                            </form>
                         </div>
                     <?php else: ?>
                         <div class="flex items-center gap-2 text-sm text-slate-700">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Last audited <?php echo date('M j, Y', $glob['selected_repo']['last_audited_at']); ?>
-                            <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
+                            <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAuditLoading()">
+                                <button type="submit" class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
+                            </form>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1310,7 +1314,6 @@
             </div>
         </div>
     </div>
-	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-utility.js"></script>
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-core.js"></script>
     <script>
         function switchTab(tabName) {
@@ -1430,7 +1433,62 @@
             if (selectedMode) {
                 toggleConnectionSection(selectedMode.value);
             }
+
+            // Check for session messages and display toast
+            <?php if (isset($_SESSION['message'])): ?>
+                showToast('<?php echo addslashes($_SESSION['message']); ?>');
+                <?php unset($_SESSION['message']); ?>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['success'])): ?>
+                showToast('<?php echo addslashes($_SESSION['success']); ?>');
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['error'])): ?>
+                showToast('<?php echo addslashes($_SESSION['error']); ?>', true);
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
         });
+
+        // Toast notification function
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+
+            if (isError) {
+                toast.classList.add('bg-red-500');
+                toast.classList.remove('bg-emerald-600');
+            } else {
+                toast.classList.add('bg-emerald-600');
+                toast.classList.remove('bg-red-500');
+            }
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        // Show loading overlay for audit
+        function showAuditLoading() {
+            const overlay = document.getElementById('audit-loading');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
     </script>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="alert"></div>
+
+    <!-- Audit Loading Overlay -->
+    <div id="audit-loading" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 shadow-xl text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mx-auto mb-4"></div>
+            <h3 class="text-lg font-semibold text-slate-900 mb-2">Running Audit...</h3>
+            <p class="text-sm text-slate-600">Importing issues from GitHub</p>
+        </div>
+    </div>
 </body>
 </html>

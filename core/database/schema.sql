@@ -44,6 +44,13 @@ CREATE TABLE IF NOT EXISTS issues (
     author TEXT,
     labels TEXT,
     url TEXT,
+    assignees TEXT,
+    milestone TEXT,
+    comments_count INTEGER DEFAULT 0,
+    reactions_total INTEGER DEFAULT 0,
+    is_locked INTEGER DEFAULT 0,
+    label_colors TEXT,
+    last_activity_at INTEGER,
     FOREIGN KEY (repository_id) REFERENCES repositories(id) ON DELETE CASCADE,
     UNIQUE(repository_id, github_issue_id)
 );

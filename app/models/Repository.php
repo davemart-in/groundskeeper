@@ -125,6 +125,11 @@ class Repository {
             $params[] = $data['last_synced_at'];
         }
 
+        if (isset($data['last_audited_at'])) {
+            $updates[] = 'last_audited_at = ?';
+            $params[] = $data['last_audited_at'];
+        }
+
         // Always update timestamp
         $updates[] = 'updated_at = ?';
         $params[] = time();

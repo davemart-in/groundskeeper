@@ -105,6 +105,9 @@ class GitHubAPI {
                 break;
             }
 
+            // Check if we got a full page BEFORE filtering
+            $gotFullPage = count($pageIssues) === $perPage;
+
             // Filter out pull requests (GitHub API returns PRs as issues)
             $pageIssues = array_filter($pageIssues, function($issue) {
                 return !isset($issue['pull_request']);
@@ -112,8 +115,8 @@ class GitHubAPI {
 
             $issues = array_merge($issues, $pageIssues);
 
-            // If we got less than perPage, we're done
-            if (count($pageIssues) < $perPage) {
+            // If we got less than perPage before filtering, we're done
+            if (!$gotFullPage) {
                 break;
             }
 
