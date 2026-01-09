@@ -20,6 +20,9 @@ if ($glob['selected_repo']) {
 /* LOAD ANALYSIS RESULTS ---- */
 $glob['analysis'] = $_SESSION['analysis_results'] ?? null;
 
+/* LOAD PENDING AREAS ---- */
+$glob['pending_areas'] = $_SESSION['pending_areas'] ?? null;
+
 /* LOAD VIEW ---- */
 if (isset($glob['view'])) {
 	require_once($glob['view']);

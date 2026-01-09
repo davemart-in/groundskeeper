@@ -51,9 +51,22 @@ CREATE TABLE IF NOT EXISTS issues (
     is_locked INTEGER DEFAULT 0,
     label_colors TEXT,
     last_activity_at INTEGER,
+    area_id INTEGER,
     FOREIGN KEY (repository_id) REFERENCES repositories(id) ON DELETE CASCADE,
+    FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE SET NULL,
     UNIQUE(repository_id, github_issue_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_repository_id ON issues(repository_id);
 CREATE INDEX IF NOT EXISTS idx_github_issue_id ON issues(github_issue_id);
+
+CREATE TABLE IF NOT EXISTS areas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repository_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (repository_id) REFERENCES repositories(id) ON DELETE CASCADE,
+    UNIQUE(repository_id, name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_area_repository_id ON areas(repository_id);

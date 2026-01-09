@@ -559,6 +559,35 @@
                                             <textarea name="priority_labels_text" rows="4" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border focus:outline-none focus:ring-emerald-500 focus:border-emerald-500" placeholder="priority: high&#10;priority: medium&#10;priority: low"><?php echo htmlspecialchars($priorityLabelsText); ?></textarea>
                                             <p class="text-xs text-slate-500 mt-1">Leave blank if this repository doesn't use priority labels.</p>
                                         </div>
+
+                                        <!-- Areas Section -->
+                                        <div class="border-t border-slate-200 pt-4">
+                                            <label class="block text-sm font-medium text-slate-700 mb-2">Functional Areas</label>
+                                            <p class="text-xs text-slate-500 mb-3">Areas are auto-detected on first analysis using AI. They help categorize issues by codebase section.</p>
+
+                                            <?php if (!empty($glob['areas'])): ?>
+                                                <div class="bg-slate-50 rounded-md p-3 mb-3">
+                                                    <ul class="space-y-1 text-sm text-slate-700">
+                                                        <?php foreach ($glob['areas'] as $area): ?>
+                                                            <li class="flex items-center">
+                                                                <i class="fa-solid fa-circle text-xs text-emerald-500 mr-2"></i>
+                                                                <?php echo htmlspecialchars($area['name']); ?>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                </div>
+                                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" class="inline">
+                                                    <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
+                                                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Areas
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <div class="bg-slate-50 rounded-md p-3 text-sm text-slate-600">
+                                                    <i class="fa-solid fa-info-circle mr-1 text-slate-400"></i>
+                                                    No areas detected yet. Run analysis to discover areas automatically.
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
 
                                     <div class="pt-4 flex justify-end">
@@ -1505,11 +1534,47 @@
 
     <!-- Analyze Loading Overlay -->
     <div id="analyze-loading" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-8 shadow-xl text-center">
+        <div class="bg-white rounded-lg p-8 shadow-xl text-center max-w-md">
             <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
             <h3 class="text-lg font-semibold text-slate-900 mb-2">Analyzing Issues...</h3>
-            <p class="text-sm text-slate-600">Processing bug reports</p>
+            <p class="text-sm text-slate-600 mb-2">Processing bug reports with AI</p>
+            <p class="text-xs text-slate-500">This can take 5-15 minutes for large repos. Time to grab a coffee! ☕</p>
         </div>
     </div>
+
+    <!-- Area Approval Modal -->
+    <?php if (isset($glob['pending_areas']) && !empty($glob['pending_areas'])): ?>
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 shadow-xl max-w-2xl w-full mx-4">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">
+                <i class="fa-solid fa-sparkles text-blue-600 mr-2"></i>
+                Review Discovered Areas
+            </h3>
+            <p class="text-sm text-slate-600 mb-4">
+                The following functional areas were discovered by analyzing your issues.
+                You can edit, add, or remove areas before saving (one per line).
+            </p>
+
+            <form method="POST" action="<?php echo BASEURL; ?>analyze/approve-areas">
+                <textarea
+                    name="areas"
+                    rows="12"
+                    class="w-full border border-slate-300 rounded-md p-3 mb-4 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter areas (one per line)"
+                ><?php echo htmlspecialchars(implode("\n", $glob['pending_areas']['areas'])); ?></textarea>
+
+                <div class="flex justify-end gap-3">
+                    <a href="<?php echo BASEURL; ?>" class="px-4 py-2 text-slate-600 hover:text-slate-800 rounded-md hover:bg-slate-100">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 font-medium">
+                        <i class="fa-solid fa-check mr-1"></i>
+                        Approve & Save Areas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
 </body>
 </html>

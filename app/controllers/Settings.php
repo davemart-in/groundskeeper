@@ -231,6 +231,30 @@ if (is_numeric($segment1) && $segment2 === 'delete' && $_SERVER['REQUEST_METHOD'
     exit;
 }
 
+// Route: /settings/{repo_id}/reset-areas - Reset areas for repository
+if (is_numeric($segment1) && $segment2 === 'reset-areas' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $repoId = (int)$segment1;
+
+    $repo = $repoModel->findById($repoId);
+    if (!$repo) {
+        $_SESSION['error'] = 'Repository not found';
+        redirect('settings');
+        exit;
+    }
+
+    try {
+        $areaModel = new Area();
+        $areaModel->deleteByRepository($repoId);
+        $_SESSION['success'] = 'Areas reset! Run analysis again to discover new areas.';
+    } catch (Exception $e) {
+        error_log('Reset areas error: ' . $e->getMessage());
+        $_SESSION['error'] = 'Failed to reset areas';
+    }
+
+    redirect('settings/' . $repoId);
+    exit;
+}
+
 // Load repositories for sidebar
 $glob['repositories'] = $repoModel->findAll();
 
@@ -255,8 +279,13 @@ $glob['selected_repo'] = $selectedRepo;
 if ($selectedRepo) {
     $issueModel = new Issue();
     $glob['issues'] = $issueModel->findByRepository($selectedRepo['id']);
+
+    // Load areas for selected repo
+    $areaModel = new Area();
+    $glob['areas'] = $areaModel->findByRepository($selectedRepo['id']);
 } else {
     $glob['issues'] = [];
+    $glob['areas'] = [];
 }
 
 // Pass user data to view

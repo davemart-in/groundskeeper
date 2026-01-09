@@ -8,6 +8,7 @@
 
 $repoModel = new Repository();
 $issueModel = new Issue();
+$areaModel = new Area();
 $segment1 = $glob['route'][1] ?? '';
 $segment2 = $glob['route'][2] ?? '';
 
@@ -28,6 +29,39 @@ if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] =
     $issues = $issueModel->findByRepository($repoId);
     $issueCount = count($issues);
 
+    // Check if areas exist, if not trigger discovery
+    $areas = $areaModel->findByRepository($repoId);
+
+    if (empty($areas)) {
+        // Discover areas using AI
+        try {
+            $discoveredAreas = discoverAreas($repoId, $issues);
+
+            if ($discoveredAreas) {
+                // Store for approval modal
+                $_SESSION['pending_areas'] = [
+                    'repo_id' => $repoId,
+                    'areas' => $discoveredAreas
+                ];
+                $_SESSION['success'] = "Area discovery complete! Please review and approve the suggested areas.";
+                redirect('');
+                exit;
+            } else {
+                $_SESSION['error'] = 'Failed to discover areas. Please check your Claude API key.';
+                redirect('');
+                exit;
+            }
+        } catch (Exception $e) {
+            error_log('Area discovery error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error: ' . $e->getMessage();
+            redirect('');
+            exit;
+        }
+    }
+
+    // Categorize issues by area
+    categorizeIssues($repoId, $issues, $areas);
+
     // Run all analysis processes
     $results = runAnalysis($repoId, $issues);
 
@@ -38,6 +72,47 @@ if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] =
     $_SESSION['success'] = "Analysis complete! Analyzed {$issueCount} issue" . ($issueCount !== 1 ? 's' : '') . ".";
 
     // Redirect back to dashboard
+    redirect('');
+    exit;
+}
+
+// Route: /analyze/approve-areas (approve discovered areas)
+if ($segment1 === 'approve-areas' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_SESSION['pending_areas'])) {
+        $_SESSION['error'] = 'No pending areas to approve.';
+        redirect('');
+        exit;
+    }
+
+    $pendingData = $_SESSION['pending_areas'];
+    $repoId = $pendingData['repo_id'];
+    $areasText = $_POST['areas'] ?? '';
+
+    if (empty($areasText)) {
+        $_SESSION['error'] = 'No areas provided.';
+        redirect('');
+        exit;
+    }
+
+    // Parse textarea input (one area per line)
+    $lines = explode("\n", $areasText);
+    $areas = array_filter(array_map('trim', $lines));
+
+    if (empty($areas)) {
+        $_SESSION['error'] = 'No valid areas provided.';
+        redirect('');
+        exit;
+    }
+
+    // Save approved areas to database
+    foreach ($areas as $areaName) {
+        if (!empty($areaName)) {
+            $areaModel->create($repoId, $areaName);
+        }
+    }
+
+    unset($_SESSION['pending_areas']);
+    $_SESSION['success'] = 'Areas saved! Re-run analysis to categorize issues.';
     redirect('');
     exit;
 }
@@ -530,6 +605,179 @@ function analyzePriorities($issues) {
             ]
         ]
     ];
+}
+
+/**
+ * Discover functional areas using Claude AI
+ *
+ * @param int $repoId Repository ID
+ * @param array $issues Array of issues
+ * @return array|false Array of area names or false on failure
+ */
+function discoverAreas($repoId, $issues) {
+    $claude = new ClaudeAPI();
+    $batchSize = 25;
+    $batches = array_chunk($issues, $batchSize);
+    $allSuggestions = [];
+
+    foreach ($batches as $index => $batch) {
+        $batchNum = $index + 1;
+        $totalBatches = count($batches);
+
+        // Build prompt
+        $prompt = "Analyze these GitHub issues and suggest high-level, top-level functional areas that best represent the main codebase sections. Avoid secondary or tertiary categories. Suggest as many or as few as naturally emerge from the issues.\n\n";
+
+        if (!empty($allSuggestions)) {
+            $prompt .= "Previous batches suggested: " . implode(', ', $allSuggestions) . "\n\n";
+        }
+
+        $prompt .= "Issues (batch $batchNum of $totalBatches):\n";
+        foreach ($batch as $issue) {
+            $prompt .= "- Title: {$issue['title']}\n";
+            $body = $issue['body'] ?? '';
+            if (!empty($body)) {
+                $prompt .= "  Body: " . substr($body, 0, 200) . "\n";
+            }
+        }
+
+        $prompt .= "\nReturn ONLY a JSON array of area names, no other text. Example: [\"Area 1\", \"Area 2\"]";
+
+        // Retry logic with exponential backoff
+        $maxRetries = 3;
+        $response = false;
+        for ($retry = 0; $retry < $maxRetries; $retry++) {
+            $response = $claude->getText($prompt, 2048);
+            if ($response) break;
+
+            if ($retry < $maxRetries - 1) {
+                sleep(pow(2, $retry) * 10); // 10s, 20s, 40s
+            }
+        }
+
+        if (!$response) {
+            error_log("Area discovery: No response for batch $batchNum after $maxRetries attempts");
+            continue;
+        }
+
+        // Parse response
+        $json = extractJSON($response);
+        if (!$json) {
+            error_log("Area discovery: Failed to extract JSON from batch $batchNum");
+            continue;
+        }
+
+        $suggestions = json_decode($json, true);
+        if (!is_array($suggestions)) {
+            error_log("Area discovery: Invalid JSON in batch $batchNum");
+            continue;
+        }
+
+        $allSuggestions = array_unique(array_merge($allSuggestions, $suggestions));
+
+        // Delay between batches to avoid rate limits
+        if ($batchNum < $totalBatches) {
+            sleep(5);
+        }
+    }
+
+    // Consolidate suggestions from all batches
+    if (empty($allSuggestions)) {
+        return false;
+    }
+
+    $prompt = "Here are area suggestions from multiple batches: " . implode(', ', $allSuggestions) . "\n\n";
+    $prompt .= "Consolidate these into a clear, distinct set of high-level functional areas. Merge similar areas and remove duplicates. Return however many areas make sense - don't artificially limit the count.\n\n";
+    $prompt .= "Return ONLY a JSON array of final area names, no other text. Example: [\"Area 1\", \"Area 2\"]";
+
+    $response = $claude->getText($prompt, 2048);
+    if (!$response) {
+        return false;
+    }
+
+    $json = extractJSON($response);
+    if (!$json) {
+        return false;
+    }
+
+    $finalAreas = json_decode($json, true);
+    return is_array($finalAreas) ? $finalAreas : false;
+}
+
+/**
+ * Categorize issues by area using Claude AI
+ *
+ * @param int $repoId Repository ID
+ * @param array $issues Array of issues
+ * @param array $areas Array of area objects
+ */
+function categorizeIssues($repoId, $issues, $areas) {
+    $claude = new ClaudeAPI();
+    $issueModel = new Issue();
+    $batchSize = 100;
+    $batches = array_chunk($issues, $batchSize);
+
+    // Extract area names
+    $areaNames = array_map(function($area) { return $area['name']; }, $areas);
+    $areaMap = [];
+    foreach ($areas as $area) {
+        $areaMap[$area['name']] = $area['id'];
+    }
+
+    foreach ($batches as $batch) {
+        // Prepare issue data
+        $issueData = [];
+        foreach ($batch as $issue) {
+            $issueData[] = [
+                'id' => $issue['id'],
+                'title' => $issue['title'],
+                'body' => substr($issue['body'] ?? '', 0, 300)
+            ];
+        }
+
+        // Build prompt
+        $prompt = "For each issue, select the ONE area that best matches from this list: " . implode(', ', $areaNames) . "\n\n";
+        $prompt .= "Issues:\n";
+        foreach ($issueData as $issue) {
+            $prompt .= "ID: {$issue['id']}\n";
+            $prompt .= "Title: {$issue['title']}\n";
+            if (!empty($issue['body'])) {
+                $prompt .= "Body: {$issue['body']}\n";
+            }
+            $prompt .= "\n";
+        }
+
+        $prompt .= "Return ONLY a JSON array of objects with this format: [{\"issue_id\": 123, \"area\": \"Area Name\"}, ...]\nNo other text.";
+
+        $response = $claude->getText($prompt, 4096);
+
+        if ($response) {
+            $json = extractJSON($response);
+            if ($json) {
+                $categorizations = json_decode($json, true);
+                if (is_array($categorizations)) {
+                    foreach ($categorizations as $cat) {
+                        if (isset($cat['issue_id'], $cat['area'], $areaMap[$cat['area']])) {
+                            $issueModel->updateArea($cat['issue_id'], $areaMap[$cat['area']]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Extract JSON from Claude response (handles cases where response includes extra text)
+ *
+ * @param string $text Response text
+ * @return string|false JSON string or false
+ */
+function extractJSON($text) {
+    // Try to find JSON array in the text
+    if (preg_match('/\[.*\]/s', $text, $matches)) {
+        return $matches[0];
+    }
+    return false;
 }
 
 // If we get here, invalid route

@@ -150,7 +150,20 @@ class Issue {
             'reactions_total' => $row['reactions_total'] ?? 0,
             'is_locked' => isset($row['is_locked']) ? (bool)$row['is_locked'] : false,
             'label_colors' => isset($row['label_colors']) && $row['label_colors'] ? json_decode($row['label_colors'], true) : [],
-            'last_activity_at' => $row['last_activity_at'] ?? null
+            'last_activity_at' => $row['last_activity_at'] ?? null,
+            'area_id' => $row['area_id'] ?? null
         ];
+    }
+
+    /**
+     * Update issue area
+     *
+     * @param int $issueId Issue ID
+     * @param int|null $areaId Area ID
+     * @return bool Success status
+     */
+    public function updateArea($issueId, $areaId) {
+        $sql = "UPDATE issues SET area_id = ? WHERE id = ?";
+        return $this->db->execute($sql, [$areaId, $issueId]);
     }
 }

@@ -74,10 +74,14 @@ require_once(COREPATH.'libraries/GitHubOAuth.php');
 /* GITHUB API ------------------------------------------- */
 require_once(COREPATH.'libraries/GitHubAPI.php');
 
+/* CLAUDE API ------------------------------------------- */
+require_once(COREPATH.'libraries/ClaudeAPI.php');
+
 /* MODELS ------------------------------------------- */
 require_once(APPPATH.'models/User.php');
 require_once(APPPATH.'models/Repository.php');
 require_once(APPPATH.'models/Issue.php');
+require_once(APPPATH.'models/Area.php');
 
 /* ROUTER ------------------------------------------- */
 require_once(COREPATH.'libraries/Router.php');
