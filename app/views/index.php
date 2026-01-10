@@ -295,48 +295,34 @@
                      <!-- By Functionality -->
                      <div>
                         <h3 class="text-lg font-bold text-slate-900 mb-4">Issues by Area</h3>
+                        <?php if (!empty($glob['area_stats'])): ?>
                         <div class="bg-white p-2 rounded-lg shadow-sm border border-slate-200">
                            <table class="min-w-full text-sm">
                                <tbody class="divide-y divide-slate-100">
-                                   <tr class="hover:bg-slate-50 cursor-pointer group" onclick="filterDashboard('Checkout / Payment', 214)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Checkout / Payment</td>
-                                       <td class="p-3 text-right text-slate-500">214 <span class="text-xs text-slate-400 ml-1">(24%)</span></td>
+                                   <?php
+                                   $topCount = 10;
+                                   foreach ($glob['area_stats'] as $index => $area):
+                                       $isHidden = $index >= $topCount;
+                                       $rowClass = $isHidden ? 'hidden area-hidden bg-slate-50/50 hover:bg-slate-100' : 'hover:bg-slate-50';
+                                   ?>
+                                   <tr class="<?php echo $rowClass; ?> cursor-pointer group" onclick="filterDashboard('<?php echo htmlspecialchars(addslashes($area['name'])); ?>', <?php echo $area['count']; ?>)">
+                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700"><?php echo htmlspecialchars($area['name']); ?></td>
+                                       <td class="p-3 text-right text-slate-500 whitespace-nowrap"><?php echo $area['count']; ?> <span class="text-xs text-slate-400 ml-1">(<?php echo $area['percentage']; ?>%)</span></td>
                                    </tr>
-                                   <tr class="hover:bg-slate-50 cursor-pointer group" onclick="filterDashboard('Admin Dashboard', 189)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Admin Dashboard</td>
-                                       <td class="p-3 text-right text-slate-500">189 <span class="text-xs text-slate-400 ml-1">(21%)</span></td>
-                                   </tr>
-                                   <tr class="hover:bg-slate-50 cursor-pointer group" onclick="filterDashboard('REST API', 102)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">REST API</td>
-                                       <td class="p-3 text-right text-slate-500">102 <span class="text-xs text-slate-400 ml-1">(11%)</span></td>
-                                   </tr>
-                                   <tr class="hover:bg-slate-50 cursor-pointer group" onclick="filterDashboard('Emails', 86)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Emails</td>
-                                       <td class="p-3 text-right text-slate-500">86 <span class="text-xs text-slate-400 ml-1">(9%)</span></td>
-                                   </tr>
-                                   <tr class="hover:bg-slate-50 cursor-pointer group" onclick="filterDashboard('Themes / Blocks', 74)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Themes / Blocks</td>
-                                       <td class="p-3 text-right text-slate-500">74 <span class="text-xs text-slate-400 ml-1">(8%)</span></td>
-                                   </tr>
-                                   <!-- Hidden Rows -->
-                                   <tr class="hidden area-hidden bg-slate-50/50 hover:bg-slate-100 cursor-pointer group" onclick="filterDashboard('Coupons', 45)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Coupons</td>
-                                       <td class="p-3 text-right text-slate-500">45 <span class="text-xs text-slate-400 ml-1">(5%)</span></td>
-                                   </tr>
-                                   <tr class="hidden area-hidden bg-slate-50/50 hover:bg-slate-100 cursor-pointer group" onclick="filterDashboard('Shipping', 32)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Shipping</td>
-                                       <td class="p-3 text-right text-slate-500">32 <span class="text-xs text-slate-400 ml-1">(4%)</span></td>
-                                   </tr>
-                                   <tr class="hidden area-hidden bg-slate-50/50 hover:bg-slate-100 cursor-pointer group" onclick="filterDashboard('Analytics', 28)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700">Analytics</td>
-                                       <td class="p-3 text-right text-slate-500">28 <span class="text-xs text-slate-400 ml-1">(3%)</span></td>
-                                   </tr>
+                                   <?php endforeach; ?>
                                </tbody>
                            </table>
+                           <?php if (count($glob['area_stats']) > $topCount): ?>
                            <div class="p-2 border-t border-slate-50 text-center">
                                 <button onclick="toggleAreas()" id="btn-show-areas" class="text-xs font-medium text-emerald-600 hover:text-emerald-700">Show all</button>
                            </div>
+                           <?php endif; ?>
                         </div>
+                        <?php else: ?>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center text-slate-500 text-sm">
+                            No areas defined yet. Run analysis to categorize issues.
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                 </div>

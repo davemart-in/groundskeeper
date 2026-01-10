@@ -13,8 +13,39 @@ $glob['selected_repo'] = !empty($glob['repositories']) ? $glob['repositories'][0
 if ($glob['selected_repo']) {
 	$issueModel = new Issue();
 	$glob['issues'] = $issueModel->findByRepository($glob['selected_repo']['id']);
+	$totalIssues = count($glob['issues']);
+
+	/* LOAD AREAS WITH ISSUE COUNTS ---- */
+	$areaModel = new Area();
+	$areas = $areaModel->findByRepository($glob['selected_repo']['id']);
+
+	// Get issue counts for each area
+	$areaStats = [];
+	foreach ($areas as $area) {
+		$count = 0;
+		foreach ($glob['issues'] as $issue) {
+			if ($issue['area_id'] == $area['id']) {
+				$count++;
+			}
+		}
+		if ($count > 0) {
+			$areaStats[] = [
+				'name' => $area['name'],
+				'count' => $count,
+				'percentage' => $totalIssues > 0 ? round(($count / $totalIssues) * 100) : 0
+			];
+		}
+	}
+
+	// Sort by count descending
+	usort($areaStats, function($a, $b) {
+		return $b['count'] - $a['count'];
+	});
+
+	$glob['area_stats'] = $areaStats;
 } else {
 	$glob['issues'] = [];
+	$glob['area_stats'] = [];
 }
 
 /* LOAD ANALYSIS RESULTS ---- */
