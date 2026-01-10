@@ -55,11 +55,18 @@ if ($glob['selected_repo']) {
 		return !empty($issue['is_cleanup_candidate']);
 	});
 	$glob['cleanup_candidates'] = array_values($cleanupCandidates);
+
+	/* GET MISSING CRITICAL INFO ---- */
+	$missingInfo = array_filter($glob['issues'], function($issue) {
+		return !empty($issue['is_missing_context']);
+	});
+	$glob['missing_info_issues'] = array_values($missingInfo);
 } else {
 	$glob['issues'] = [];
 	$glob['area_stats'] = [];
 	$glob['high_signal_issues'] = [];
 	$glob['cleanup_candidates'] = [];
+	$glob['missing_info_issues'] = [];
 }
 
 /* LOAD ANALYSIS RESULTS ---- */

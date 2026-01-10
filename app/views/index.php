@@ -201,8 +201,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-missing-info">656</span> Missing Critical Info</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Issues without enough context for engineers to pick up</p>
+                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-missing-info"><?php echo count($glob['missing_info_issues']); ?></span> Missing Critical Info</h4>
+                                    <p class="text-sm text-slate-500 mt-1">Issues lacking critical information</p>
                                 </div>
                             </div>
                             <button onclick="openModal('missing-info')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
@@ -653,7 +653,7 @@
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -767,7 +767,7 @@
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -872,7 +872,7 @@
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -985,13 +985,13 @@
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Issues Missing Context</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found 656 issues missing critical information required for triage.</p>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['missing_info_issues']); ?> issues missing critical information identified by AI analysis.</p>
                         </div>
                         <button onclick="closeModal('missing-info')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -1017,93 +1017,76 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
+                        <?php if (!empty($glob['missing_info_issues'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-10"></th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Issue</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Missing Elements</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Severity</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Labels</th>
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-slate-200">
-                                <!-- Row 1 -->
+                                <?php foreach ($glob['missing_info_issues'] as $issue):
+                                    $labels = is_array($issue['labels']) ? $issue['labels'] : json_decode($issue['labels'], true);
+                                    if (!is_array($labels)) $labels = [];
+                                    $missingElements = is_array($issue['missing_elements']) ? $issue['missing_elements'] : json_decode($issue['missing_elements'], true);
+                                    if (!is_array($missingElements)) $missingElements = [];
+                                    $timeAgo = time() - $issue['created_at'];
+                                    $openedText = $timeAgo < 86400 ? floor($timeAgo/3600) . ' hours ago' :
+                                                 ($timeAgo < 2592000 ? floor($timeAgo/86400) . ' days ago' :
+                                                 floor($timeAgo/2592000) . ' months ago');
+                                ?>
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Cart page is blank</div>
+                                        <div class="text-sm font-medium text-slate-900"><?php echo htmlspecialchars($issue['title']); ?></div>
                                         <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19512 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 3 hours ago
+                                            <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="hover:text-emerald-600 hover:underline">#<?php echo $issue['issue_number']; ?> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                            • opened <?php echo $openedText; ?>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700">Missing Steps to Reproduce</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700">Missing Version Info</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        High
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-800 font-medium">Draft Reply</button>
-                                    </td>
-                                </tr>
-                                <!-- Row 2 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Plugin conflict with Elementor</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19490 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 1 day ago
+                                            <?php if (!empty($missingElements)): ?>
+                                                <?php foreach (array_slice($missingElements, 0, 3) as $element): ?>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700"><?php echo htmlspecialchars($element); ?></span>
+                                                <?php endforeach; ?>
+                                                <?php if (count($missingElements) > 3): ?>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-500">+<?php echo count($missingElements) - 3; ?></span>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span class="text-xs text-slate-400">No specific elements identified</span>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700">Missing Error Logs</span>
+                                            <?php foreach (array_slice($labels, 0, 2) as $label): ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600"><?php echo htmlspecialchars($label); ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count($labels) > 2): ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-500">+<?php echo count($labels) - 2; ?></span>
+                                            <?php endif; ?>
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        Medium
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-800 font-medium">Draft Reply</button>
+                                        <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="text-emerald-600 hover:text-emerald-900 font-medium">View</a>
                                     </td>
                                 </tr>
-                                <!-- Row 3 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Orders not syncing</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19485 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 1 day ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700">Missing Environment Report</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700">Vague Description</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        High
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-800 font-medium">Draft Reply</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <?php else: ?>
+                        <div class="p-12 text-center text-slate-500">
+                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
+                            <p class="text-sm">No issues missing critical information. Run analysis to identify incomplete issues.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -1120,7 +1103,7 @@
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
