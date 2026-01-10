@@ -141,8 +141,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-high-signal">31</span> High Signal Issues</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Severe or high priority bugs we should address ASAP</p>
+                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-high-signal"><?php echo count($glob['high_signal_issues']); ?></span> High Signal Issues</h4>
+                                    <p class="text-sm text-slate-500 mt-1">Valuable, actionable issues worth prioritizing</p>
                                 </div>
                             </div>
                             <button onclick="openModal('high-signal')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
@@ -800,7 +800,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">High Signal Issues Queue</h3>
-                            <p class="text-sm text-slate-500 mt-1">31 issues flagged for immediate attention based on severity, activity, and keywords.</p>
+                            <p class="text-sm text-slate-500 mt-1"><?php echo count($glob['high_signal_issues']); ?> valuable, actionable issues identified by AI analysis.</p>
                         </div>
                         <button onclick="closeModal('high-signal')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -826,97 +826,63 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
+                        <?php if (!empty($glob['high_signal_issues'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-10"></th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Issue</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Signals Detected</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Score</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Labels</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Comments</th>
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-slate-200">
-                                <!-- Row 1 -->
+                                <?php foreach ($glob['high_signal_issues'] as $issue):
+                                    $labels = is_array($issue['labels']) ? $issue['labels'] : json_decode($issue['labels'], true);
+                                    if (!is_array($labels)) $labels = [];
+                                    $timeAgo = time() - $issue['created_at'];
+                                    $timeText = $timeAgo < 3600 ? floor($timeAgo/60) . ' minutes ago' :
+                                               ($timeAgo < 86400 ? floor($timeAgo/3600) . ' hours ago' :
+                                               floor($timeAgo/86400) . ' days ago');
+                                ?>
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Critical DB Error on Checkout</div>
+                                        <div class="text-sm font-medium text-slate-900"><?php echo htmlspecialchars($issue['title']); ?></div>
                                         <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19500 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 1 hour ago
+                                            <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="hover:text-emerald-600 hover:underline">#<?php echo $issue['issue_number']; ?> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                            • opened <?php echo $timeText; ?>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Critical Label</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Keyword: "Data Loss"</span>
+                                            <?php foreach (array_slice($labels, 0, 3) as $label): ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700"><?php echo htmlspecialchars($label); ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count($labels) > 3): ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-500">+<?php echo count($labels) - 3; ?></span>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm font-bold text-slate-900">98</span>
-                                        <span class="text-xs text-slate-400">/100</span>
+                                        <span class="text-sm text-slate-700"><?php echo $issue['comments_count']; ?></span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 font-medium">Triage</button>
+                                        <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="text-emerald-600 hover:text-emerald-900 font-medium">View</a>
                                     </td>
                                 </tr>
-                                <!-- Row 2 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Security Vulnerability in API Auth</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19488 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 4 hours ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Security</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">High Activity</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm font-bold text-slate-900">95</span>
-                                        <span class="text-xs text-slate-400">/100</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 font-medium">Triage</button>
-                                    </td>
-                                </tr>
-                                <!-- Row 3 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Payment Gateway Timeout</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19450 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 1 day ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">High Priority</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Multiple Reports</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm font-bold text-slate-900">89</span>
-                                        <span class="text-xs text-slate-400">/100</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 font-medium">Triage</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <?php else: ?>
+                        <div class="p-12 text-center text-slate-500">
+                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
+                            <p class="text-sm">No high signal issues found. Run analysis to identify valuable issues.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

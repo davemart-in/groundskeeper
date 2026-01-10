@@ -43,9 +43,16 @@ if ($glob['selected_repo']) {
 	});
 
 	$glob['area_stats'] = $areaStats;
+
+	/* GET HIGH SIGNAL ISSUES ---- */
+	$highSignalIssues = array_filter($glob['issues'], function($issue) {
+		return !empty($issue['is_high_signal']);
+	});
+	$glob['high_signal_issues'] = array_values($highSignalIssues);
 } else {
 	$glob['issues'] = [];
 	$glob['area_stats'] = [];
+	$glob['high_signal_issues'] = [];
 }
 
 /* LOAD ANALYSIS RESULTS ---- */
