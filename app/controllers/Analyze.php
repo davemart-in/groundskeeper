@@ -9,6 +9,7 @@
 $repoModel = new Repository();
 $issueModel = new Issue();
 $areaModel = new Area();
+$jobModel = new AnalysisJob();
 $segment1 = $glob['route'][1] ?? '';
 $segment2 = $glob['route'][2] ?? '';
 
@@ -59,20 +60,38 @@ if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] =
         }
     }
 
-    // Categorize issues by area
-    categorizeIssues($repoId, $issues, $areas);
+    // Check for existing incomplete job
+    $existingJob = $jobModel->findActive($repoId);
 
-    // Run all analysis processes
-    $results = runAnalysis($repoId, $issues);
+    if ($existingJob && !isset($_POST['force_restart'])) {
+        // Return existing job for user to decide
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'has_existing_job' => true,
+            'job_id' => $existingJob['id'],
+            'processed' => $existingJob['processed_issues'],
+            'total' => $existingJob['total_issues']
+        ]);
+        exit;
+    }
 
-    // Store analysis results in session for the dashboard to use
-    $_SESSION['analysis_results'] = $results;
+    // Cancel old job if restarting
+    if ($existingJob && isset($_POST['force_restart'])) {
+        $jobModel->fail($existingJob['id'], 'Restarted by user');
+    }
 
-    // Set success message
-    $_SESSION['success'] = "Analysis complete! Analyzed {$issueCount} issue" . ($issueCount !== 1 ? 's' : '') . ".";
+    // Create new analysis job
+    $jobId = $jobModel->create($repoId, $issueCount);
 
-    // Redirect back to dashboard
-    redirect('');
+    // Return JSON for AJAX handling
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'has_existing_job' => false,
+        'job_id' => $jobId,
+        'total_issues' => $issueCount
+    ]);
     exit;
 }
 
@@ -117,6 +136,97 @@ if ($segment1 === 'approve-areas' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// Route: /analyze/process-chunk/{job_id} - Process a chunk of issues
+if ($segment1 === 'process-chunk' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+
+    $jobId = (int)$segment2;
+    $job = $jobModel->findById($jobId);
+
+    if (!$job) {
+        echo json_encode(['success' => false, 'error' => 'Job not found']);
+        exit;
+    }
+
+    try {
+        // Get repository and areas
+        $repo = $repoModel->findById($job['repository_id']);
+        $areas = $areaModel->findByRepository($job['repository_id']);
+
+        // Get unanalyzed issues
+        $unanalyzed = $issueModel->findUnanalyzed($job['repository_id']);
+
+        if (empty($unanalyzed)) {
+            // All done, finalize
+            $jobModel->complete($jobId);
+
+            // Run final analysis aggregation (may take a while for duplicate detection)
+            set_time_limit(300); // 5 minutes for final analysis
+            $allIssues = $issueModel->findByRepository($job['repository_id']);
+            $results = runAnalysis($job['repository_id'], $allIssues);
+            $_SESSION['analysis_results'] = $results;
+
+            echo json_encode([
+                'success' => true,
+                'completed' => true,
+                'processed' => $job['processed_issues'],
+                'total' => $job['total_issues']
+            ]);
+            exit;
+        }
+
+        // Process chunk (5 issues at a time)
+        $chunkSize = 5;
+        $chunk = array_slice($unanalyzed, 0, $chunkSize);
+
+        // Analyze chunk
+        $success = analyzeIssueChunk($job['repository_id'], $chunk, $areas);
+
+        if ($success) {
+            $processed = $job['processed_issues'] + count($chunk);
+            $jobModel->updateProgress($jobId, $processed, "Analyzing issues");
+
+            echo json_encode([
+                'success' => true,
+                'completed' => false,
+                'processed' => $processed,
+                'total' => $job['total_issues'],
+                'percent' => round(($processed / $job['total_issues']) * 100)
+            ]);
+        } else {
+            throw new Exception('Failed to analyze chunk');
+        }
+    } catch (Exception $e) {
+        error_log('Chunk processing error: ' . $e->getMessage());
+        $jobModel->fail($jobId, $e->getMessage());
+
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// Route: /analyze/status/{job_id} - Get job status
+if ($segment1 === 'status' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    header('Content-Type: application/json');
+
+    $jobId = (int)$segment2;
+    $job = $jobModel->findById($jobId);
+
+    if (!$job) {
+        echo json_encode(['success' => false, 'error' => 'Job not found']);
+        exit;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'job' => $job
+    ]);
+    exit;
+}
+
 /**
  * Run all analysis processes on issues
  *
@@ -130,17 +240,17 @@ function runAnalysis($repoId, $issues) {
     // Step 1: Basic stats
     $results['stats'] = analyzeStats($issues);
 
-    // Step 2: Detect duplicates
-    $results['duplicates'] = analyzeDuplicates($issues);
+    // Step 2: Detect duplicates using embeddings
+    $results['duplicates'] = findDuplicates($repoId);
 
     // Step 3: Detect missing information
-    $results['missing_info'] = analyzeMissingInfo($issues);
+    $results['missing_info'] = analyzeMissingInfo($repoId);
 
     // Step 4: Detect high signal issues
-    $results['high_signal'] = analyzeHighSignal($issues);
+    $results['high_signal'] = analyzeHighSignal($repoId);
 
     // Step 5: Detect cleanup opportunities
-    $results['cleanup'] = analyzeCleanup($issues);
+    $results['cleanup'] = analyzeCleanup($repoId);
 
     // Step 6: Generate suggestions
     $results['suggestions'] = analyzeSuggestions($issues);
@@ -242,174 +352,101 @@ function analyzeDuplicates($issues) {
  * @param array $issues Array of issues
  * @return array Missing information results
  */
-function analyzeMissingInfo($issues) {
-    // TODO: Implement actual missing info detection
-    // For now, return static data
+function analyzeMissingInfo($repoId) {
+    $issueModel = new Issue();
+    $allIssues = $issueModel->findByRepository($repoId);
+
+    $missingInfoIssues = array_filter($allIssues, fn($i) => $i['is_missing_context']);
+
+    $issuesList = array_slice(array_map(function($issue) {
+        return [
+            'id' => $issue['id'],
+            'number' => $issue['issue_number'],
+            'title' => $issue['title'],
+            'url' => $issue['url'],
+            'missing' => $issue['missing_elements'] ?? [],
+            'severity' => 'medium',
+            'created_at' => $issue['created_at'],
+            'body_length' => strlen($issue['body'] ?? '')
+        ];
+    }, $missingInfoIssues), 0, 10);
+
     return [
-        'count' => 589,
-        'issues' => [
-            [
-                'id' => 45678,
-                'number' => 1567,
-                'title' => 'Cart not updating',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1567',
-                'missing' => ['reproduction_steps', 'environment_info'],
-                'severity' => 'high',
-                'created_at' => time() - (86400 * 15),
-                'body_length' => 45
-            ],
-            [
-                'id' => 45689,
-                'number' => 1578,
-                'title' => 'Error on checkout',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1578',
-                'missing' => ['reproduction_steps', 'error_logs'],
-                'severity' => 'high',
-                'created_at' => time() - (86400 * 12),
-                'body_length' => 32
-            ],
-            [
-                'id' => 45701,
-                'number' => 1590,
-                'title' => 'Product images not showing',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1590',
-                'missing' => ['environment_info', 'browser_version'],
-                'severity' => 'medium',
-                'created_at' => time() - (86400 * 10),
-                'body_length' => 28
-            ],
-            [
-                'id' => 45723,
-                'number' => 1612,
-                'title' => 'Issue with plugin',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1612',
-                'missing' => ['reproduction_steps', 'expected_behavior', 'actual_behavior'],
-                'severity' => 'high',
-                'created_at' => time() - (86400 * 8),
-                'body_length' => 18
-            ]
-        ]
+        'count' => count($missingInfoIssues),
+        'issues' => $issuesList
     ];
 }
 
 /**
  * Detect high signal issues
  *
- * @param array $issues Array of issues
+ * @param int $repoId Repository ID
  * @return array High signal detection results
  */
-function analyzeHighSignal($issues) {
-    // TODO: Implement actual high signal detection
-    // For now, return static data
+function analyzeHighSignal($repoId) {
+    $issueModel = new Issue();
+    $allIssues = $issueModel->findByRepository($repoId);
+
+    $highSignalIssues = array_filter($allIssues, fn($i) => $i['is_high_signal']);
+
+    // Sort by reactions + comments (engagement)
+    usort($highSignalIssues, function($a, $b) {
+        $scoreA = ($a['reactions_total'] ?? 0) + ($a['comments_count'] ?? 0);
+        $scoreB = ($b['reactions_total'] ?? 0) + ($b['comments_count'] ?? 0);
+        return $scoreB - $scoreA;
+    });
+
+    $issuesList = array_slice(array_map(function($issue) {
+        $score = ($issue['reactions_total'] ?? 0) + ($issue['comments_count'] ?? 0);
+        return [
+            'id' => $issue['id'],
+            'number' => $issue['issue_number'],
+            'title' => $issue['title'],
+            'url' => $issue['url'],
+            'signals' => ['ai_detected'],
+            'score' => min(100, $score * 2),
+            'reactions' => $issue['reactions_total'] ?? 0,
+            'comments' => $issue['comments_count'] ?? 0,
+            'created_at' => $issue['created_at']
+        ];
+    }, $highSignalIssues), 0, 10);
+
     return [
-        'count' => 45,
-        'issues' => [
-            [
-                'id' => 45890,
-                'number' => 1701,
-                'title' => 'Critical security vulnerability in payment gateway',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1701',
-                'signals' => ['security', 'high_engagement', 'clear_reproduction'],
-                'score' => 95,
-                'reactions' => 48,
-                'comments' => 32,
-                'created_at' => time() - (86400 * 5)
-            ],
-            [
-                'id' => 45901,
-                'number' => 1712,
-                'title' => 'Data loss when updating product inventory',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1712',
-                'signals' => ['data_loss', 'clear_reproduction', 'affects_many'],
-                'score' => 92,
-                'reactions' => 41,
-                'comments' => 28,
-                'created_at' => time() - (86400 * 7)
-            ],
-            [
-                'id' => 45912,
-                'number' => 1723,
-                'title' => 'Orders not processing in high traffic',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1723',
-                'signals' => ['revenue_impact', 'clear_reproduction'],
-                'score' => 88,
-                'reactions' => 35,
-                'comments' => 24,
-                'created_at' => time() - (86400 * 9)
-            ],
-            [
-                'id' => 45923,
-                'number' => 1734,
-                'title' => 'Customer emails not being sent',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1734',
-                'signals' => ['affects_many', 'high_engagement'],
-                'score' => 85,
-                'reactions' => 29,
-                'comments' => 19,
-                'created_at' => time() - (86400 * 11)
-            ]
-        ]
+        'count' => count($highSignalIssues),
+        'issues' => $issuesList
     ];
 }
 
 /**
  * Detect cleanup opportunities
  *
- * @param array $issues Array of issues
+ * @param int $repoId Repository ID
  * @return array Cleanup opportunities
  */
-function analyzeCleanup($issues) {
-    // TODO: Implement actual cleanup detection
-    // For now, return static data
+function analyzeCleanup($repoId) {
+    $issueModel = new Issue();
+    $allIssues = $issueModel->findByRepository($repoId);
+
+    $cleanupIssues = array_filter($allIssues, fn($i) => $i['is_cleanup_candidate']);
+
+    $issuesList = array_slice(array_map(function($issue) {
+        return [
+            'id' => $issue['id'],
+            'number' => $issue['issue_number'],
+            'title' => $issue['title'],
+            'url' => $issue['url'],
+            'cleanup_type' => 'ai_detected',
+            'reason' => 'Identified by AI as cleanup candidate',
+            'last_activity' => $issue['last_activity_at'] ?? $issue['updated_at'],
+            'created_at' => $issue['created_at'],
+            'comments' => $issue['comments_count'] ?? 0,
+            'reactions' => $issue['reactions_total'] ?? 0
+        ];
+    }, $cleanupIssues), 0, 10);
+
     return [
-        'count' => 109,
-        'issues' => [
-            [
-                'id' => 46012,
-                'number' => 1823,
-                'title' => 'Feature request from 2019',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1823',
-                'cleanup_type' => 'stale',
-                'reason' => 'No activity in 18+ months',
-                'last_activity' => time() - (86400 * 547),
-                'created_at' => time() - (86400 * 1825),
-                'comments' => 3
-            ],
-            [
-                'id' => 46023,
-                'number' => 1834,
-                'title' => 'Bug fixed in v5.2 but issue still open',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1834',
-                'cleanup_type' => 'resolved_but_open',
-                'reason' => 'Comments indicate fix was released',
-                'last_activity' => time() - (86400 * 45),
-                'created_at' => time() - (86400 * 120),
-                'comments' => 12
-            ],
-            [
-                'id' => 46034,
-                'number' => 1845,
-                'title' => 'Missing priority label',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1845',
-                'cleanup_type' => 'needs_labels',
-                'reason' => 'High engagement but no priority set',
-                'last_activity' => time() - (86400 * 3),
-                'created_at' => time() - (86400 * 60),
-                'comments' => 28,
-                'reactions' => 34
-            ],
-            [
-                'id' => 46045,
-                'number' => 1856,
-                'title' => 'Cannot reproduce - needs more info',
-                'url' => 'https://github.com/woocommerce/woocommerce/issues/1856',
-                'cleanup_type' => 'stale',
-                'reason' => 'Waiting for OP response for 6 months',
-                'last_activity' => time() - (86400 * 180),
-                'created_at' => time() - (86400 * 365),
-                'comments' => 5
-            ]
-        ]
+        'count' => count($cleanupIssues),
+        'issues' => $issuesList
     ];
 }
 
@@ -778,6 +815,431 @@ function extractJSON($text) {
         return $matches[0];
     }
     return false;
+}
+
+/**
+ * Analyze a small chunk of issues (for AJAX chunked processing)
+ *
+ * @param int $repoId Repository ID
+ * @param array $chunk Small array of issues (typically 5)
+ * @param array $areas Array of areas
+ * @return bool Success status
+ */
+function analyzeIssueChunk($repoId, $chunk, $areas) {
+    $openai = new OpenAIAPI();
+    $issueModel = new Issue();
+    $repoModel = new Repository();
+
+    // Get repository for label context
+    $repo = $repoModel->findById($repoId);
+    if (!$repo) {
+        return false;
+    }
+
+    // Get all labels from repo
+    $githubToken = null;
+    $githubApi = new GitHubAPI($githubToken);
+    $repoLabels = [];
+    try {
+        $labels = $githubApi->getLabels($repo['owner'], $repo['name']);
+        if ($labels) {
+            $repoLabels = array_column($labels, 'name');
+        }
+    } catch (Exception $e) {
+        error_log('Failed to fetch labels: ' . $e->getMessage());
+    }
+
+    // Analyze this chunk with retry logic
+    $maxRetries = 3;
+    $analysisResults = false;
+    for ($retry = 0; $retry < $maxRetries; $retry++) {
+        $analysisResults = analyzeIssueBatch($chunk, $areas, $repoLabels, $openai);
+        if ($analysisResults) break;
+
+        if ($retry < $maxRetries - 1) {
+            sleep(pow(2, $retry) * 10); // Exponential backoff: 10s, 20s, 40s
+        }
+    }
+
+    if (!$analysisResults) {
+        error_log("Failed to analyze chunk after $maxRetries attempts");
+        return false;
+    }
+
+    // Generate embeddings for summaries
+    $summaries = array_column($analysisResults, 'summary');
+    $embeddings = generateEmbeddings($summaries, $openai);
+
+    // Save results to database
+    foreach ($analysisResults as $i => $analysis) {
+        $issueId = $analysis['issue_id'];
+        $data = [
+            'is_high_signal' => $analysis['is_high_signal'],
+            'is_cleanup_candidate' => $analysis['is_cleanup_candidate'],
+            'is_missing_context' => $analysis['is_missing_context'],
+            'missing_elements' => $analysis['missing_elements'],
+            'is_missing_labels' => $analysis['is_missing_labels'],
+            'suggested_labels' => $analysis['suggested_labels'],
+            'summary' => $analysis['summary'],
+            'embedding' => $embeddings[$i] ?? null
+        ];
+
+        $issueModel->updateAnalysis($issueId, $data);
+
+        // Update area if provided
+        if (isset($analysis['proposed_area_id'])) {
+            $issueModel->updateArea($issueId, $analysis['proposed_area_id']);
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Analyze all issues using OpenAI GPT-4o-mini
+ *
+ * @param int $repoId Repository ID
+ * @param array $issues Array of issues
+ * @param array $areas Array of areas
+ * @return bool Success status
+ */
+function analyzeAllIssues($repoId, $issues, $areas) {
+    $openai = new OpenAIAPI();
+    $issueModel = new Issue();
+    $repoModel = new Repository();
+
+    // Get repository for label context
+    $repo = $repoModel->findById($repoId);
+    if (!$repo) {
+        return false;
+    }
+
+    // Get all labels from repo
+    $githubToken = null; // TODO: Get from user if available
+    $githubApi = new GitHubAPI($githubToken);
+    $repoLabels = [];
+    try {
+        $labels = $githubApi->getLabels($repo['owner'], $repo['name']);
+        if ($labels) {
+            $repoLabels = array_column($labels, 'name');
+        }
+    } catch (Exception $e) {
+        error_log('Failed to fetch labels: ' . $e->getMessage());
+    }
+
+    // Batch process issues
+    $batchSize = 25;
+    $batches = array_chunk($issues, $batchSize);
+
+    foreach ($batches as $index => $batch) {
+        $batchNum = $index + 1;
+        $totalBatches = count($batches);
+
+        // Analyze batch with retry logic
+        $maxRetries = 3;
+        $analysisResults = false;
+        for ($retry = 0; $retry < $maxRetries; $retry++) {
+            $analysisResults = analyzeIssueBatch($batch, $areas, $repoLabels, $openai);
+            if ($analysisResults) break;
+
+            if ($retry < $maxRetries - 1) {
+                sleep(pow(2, $retry) * 10);
+            }
+        }
+
+        if (!$analysisResults) {
+            error_log("Issue analysis: Failed batch $batchNum after $maxRetries attempts");
+            continue;
+        }
+
+        // Generate embeddings for summaries
+        $summaries = array_column($analysisResults, 'summary');
+        $embeddings = generateEmbeddings($summaries, $openai);
+
+        // Save results to database
+        foreach ($analysisResults as $i => $analysis) {
+            $issueId = $analysis['issue_id'];
+            $data = [
+                'is_high_signal' => $analysis['is_high_signal'],
+                'is_cleanup_candidate' => $analysis['is_cleanup_candidate'],
+                'is_missing_context' => $analysis['is_missing_context'],
+                'missing_elements' => $analysis['missing_elements'],
+                'is_missing_labels' => $analysis['is_missing_labels'],
+                'suggested_labels' => $analysis['suggested_labels'],
+                'summary' => $analysis['summary'],
+                'embedding' => $embeddings[$i] ?? null
+            ];
+
+            $issueModel->updateAnalysis($issueId, $data);
+
+            // Update area if provided
+            if (isset($analysis['proposed_area_id'])) {
+                $issueModel->updateArea($issueId, $analysis['proposed_area_id']);
+            }
+        }
+
+        // Delay between batches
+        if ($batchNum < $totalBatches) {
+            sleep(5);
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Sanitize text for safe JSON encoding
+ *
+ * @param string $text Text to sanitize
+ * @return string Sanitized text
+ */
+function sanitizeText($text) {
+    if (empty($text)) {
+        return '';
+    }
+
+    // Remove control characters except newlines and tabs
+    $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+
+    // Remove invalid UTF-8 sequences
+    return iconv('UTF-8', 'UTF-8//IGNORE', $text);
+}
+
+/**
+ * Analyze a batch of issues with GPT-4o-mini
+ *
+ * @param array $batch Issues to analyze
+ * @param array $areas Available areas
+ * @param array $repoLabels Available labels in repo
+ * @param OpenAIAPI $openai OpenAI API instance
+ * @return array|false Analysis results or false on failure
+ */
+function analyzeIssueBatch($batch, $areas, $repoLabels, $openai) {
+    // Build area context
+    $areaContext = "Available areas:\n";
+    foreach ($areas as $area) {
+        $areaName = sanitizeText($area['name']);
+        $areaContext .= "- ID {$area['id']}: {$areaName}\n";
+    }
+
+    // Build label context
+    if (!empty($repoLabels)) {
+        $sanitizedLabels = array_map('sanitizeText', $repoLabels);
+        $labelContext = "Available labels: " . implode(', ', $sanitizedLabels);
+    } else {
+        $labelContext = "No existing labels found.";
+    }
+
+    // Build issues data
+    $issuesData = "";
+    foreach ($batch as $issue) {
+        $title = sanitizeText($issue['title'] ?? '');
+        $body = sanitizeText($issue['body'] ?? '');
+
+        $issuesData .= "Issue ID: {$issue['id']}\n";
+        $issuesData .= "Title: $title\n";
+        if (!empty($body)) {
+            $issuesData .= "Body: " . substr($body, 0, 500) . "\n";
+        }
+        $issuesData .= "\n";
+    }
+
+    // Build prompt
+    $prompt = "Analyze these GitHub issues and provide structured analysis for each one.
+
+$areaContext
+
+$labelContext
+
+For each issue, determine:
+1. is_high_signal (bool): Is this a valuable, actionable issue worth prioritizing?
+2. is_cleanup_candidate (bool): Should this issue be closed (stale, duplicate, not actionable)?
+3. is_missing_context (bool): Does it lack critical information?
+4. missing_elements (array): What specific information is missing (e.g., \"steps to reproduce\", \"error logs\")?
+5. is_missing_labels (bool): Would additional labels from the available labels help categorize this?
+6. suggested_labels (array): Suggest labels from the available labels list
+7. proposed_area_id (int): Which area ID best matches this issue?
+8. summary (string): Write a clear 2-3 sentence summary suitable for semantic search
+
+Issues:
+$issuesData
+
+Return ONLY a JSON array of objects with this exact format:
+[{
+  \"issue_id\": 123,
+  \"is_high_signal\": true,
+  \"is_cleanup_candidate\": false,
+  \"is_missing_context\": false,
+  \"missing_elements\": [],
+  \"is_missing_labels\": true,
+  \"suggested_labels\": [\"bug\", \"needs-triage\"],
+  \"proposed_area_id\": 5,
+  \"summary\": \"Brief summary here...\"
+}]";
+
+    // Final sanitization - ensure entire prompt is valid UTF-8
+    $prompt = sanitizeText($prompt);
+
+    $messages = [
+        ['role' => 'user', 'content' => $prompt]
+    ];
+
+    $response = $openai->getChatText($messages, null, 2000);
+
+    if (!$response) {
+        return false;
+    }
+
+    $json = extractJSON($response);
+    if (!$json) {
+        error_log("analyzeIssueBatch: Failed to extract JSON from response");
+        return false;
+    }
+
+    $results = json_decode($json, true);
+    if (!is_array($results)) {
+        error_log("analyzeIssueBatch: Invalid JSON array");
+        return false;
+    }
+
+    return $results;
+}
+
+/**
+ * Generate embeddings for text summaries
+ *
+ * @param array $summaries Array of text summaries
+ * @param OpenAIAPI $openai OpenAI API instance
+ * @return array Array of embedding vectors
+ */
+function generateEmbeddings($summaries, $openai) {
+    $embeddings = [];
+
+    foreach ($summaries as $summary) {
+        if (empty($summary)) {
+            $embeddings[] = null;
+            continue;
+        }
+
+        $maxRetries = 3;
+        $embedding = false;
+        for ($retry = 0; $retry < $maxRetries; $retry++) {
+            $embedding = $openai->embedding($summary);
+            if ($embedding) break;
+
+            if ($retry < $maxRetries - 1) {
+                sleep(2);
+            }
+        }
+
+        $embeddings[] = $embedding;
+
+        // Small delay between embeddings
+        sleep(1);
+    }
+
+    return $embeddings;
+}
+
+/**
+ * Calculate cosine similarity between two vectors
+ *
+ * @param array $vec1 First vector
+ * @param array $vec2 Second vector
+ * @return float Similarity score (0-1)
+ */
+function cosineSimilarity($vec1, $vec2) {
+    if (empty($vec1) || empty($vec2) || count($vec1) !== count($vec2)) {
+        return 0;
+    }
+
+    $dotProduct = 0;
+    $magnitude1 = 0;
+    $magnitude2 = 0;
+
+    for ($i = 0; $i < count($vec1); $i++) {
+        $dotProduct += $vec1[$i] * $vec2[$i];
+        $magnitude1 += $vec1[$i] * $vec1[$i];
+        $magnitude2 += $vec2[$i] * $vec2[$i];
+    }
+
+    $magnitude1 = sqrt($magnitude1);
+    $magnitude2 = sqrt($magnitude2);
+
+    if ($magnitude1 == 0 || $magnitude2 == 0) {
+        return 0;
+    }
+
+    return $dotProduct / ($magnitude1 * $magnitude2);
+}
+
+/**
+ * Find duplicate issues using embedding similarity
+ *
+ * @param int $repoId Repository ID
+ * @return array Duplicate groups
+ */
+function findDuplicates($repoId) {
+    $issueModel = new Issue();
+    $issues = $issueModel->findWithEmbeddings($repoId);
+
+    if (empty($issues)) {
+        return [];
+    }
+
+    $duplicates = [];
+    $threshold = 0.85;
+    $processed = [];
+
+    for ($i = 0; $i < count($issues); $i++) {
+        if (isset($processed[$issues[$i]['id']])) {
+            continue;
+        }
+
+        $embedding1 = $issues[$i]['embedding'];
+        if (!$embedding1) continue;
+
+        $similarIssues = [];
+
+        for ($j = $i + 1; $j < count($issues); $j++) {
+            if (isset($processed[$issues[$j]['id']])) {
+                continue;
+            }
+
+            $embedding2 = $issues[$j]['embedding'];
+            if (!$embedding2) continue;
+
+            $similarity = cosineSimilarity($embedding1, $embedding2);
+
+            if ($similarity >= $threshold) {
+                $similarIssues[] = [
+                    'id' => $issues[$j]['id'],
+                    'number' => $issues[$j]['issue_number'],
+                    'title' => $issues[$j]['title'],
+                    'url' => $issues[$j]['url'],
+                    'similarity' => $similarity,
+                    'created_at' => $issues[$j]['created_at']
+                ];
+                $processed[$issues[$j]['id']] = true;
+            }
+        }
+
+        if (!empty($similarIssues)) {
+            $duplicates[] = [
+                'primary' => [
+                    'id' => $issues[$i]['id'],
+                    'number' => $issues[$i]['issue_number'],
+                    'title' => $issues[$i]['title'],
+                    'url' => $issues[$i]['url'],
+                    'created_at' => $issues[$i]['created_at']
+                ],
+                'duplicates' => $similarIssues
+            ];
+            $processed[$issues[$i]['id']] = true;
+        }
+    }
+
+    return $duplicates;
 }
 
 // If we get here, invalid route

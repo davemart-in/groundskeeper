@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS issues (
     label_colors TEXT,
     last_activity_at INTEGER,
     area_id INTEGER,
+    is_high_signal INTEGER DEFAULT 0,
+    is_cleanup_candidate INTEGER DEFAULT 0,
+    is_missing_context INTEGER DEFAULT 0,
+    missing_elements TEXT,
+    is_missing_labels INTEGER DEFAULT 0,
+    suggested_labels TEXT,
+    summary TEXT,
+    embedding TEXT,
+    analyzed_at INTEGER,
     FOREIGN KEY (repository_id) REFERENCES repositories(id) ON DELETE CASCADE,
     FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE SET NULL,
     UNIQUE(repository_id, github_issue_id)
@@ -70,3 +79,20 @@ CREATE TABLE IF NOT EXISTS areas (
 );
 
 CREATE INDEX IF NOT EXISTS idx_area_repository_id ON areas(repository_id);
+
+CREATE TABLE IF NOT EXISTS analysis_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repository_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    total_issues INTEGER NOT NULL DEFAULT 0,
+    processed_issues INTEGER NOT NULL DEFAULT 0,
+    current_step TEXT,
+    error_message TEXT,
+    started_at INTEGER,
+    completed_at INTEGER,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (repository_id) REFERENCES repositories(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_analysis_job_repository ON analysis_jobs(repository_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_job_status ON analysis_jobs(status);

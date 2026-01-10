@@ -77,11 +77,15 @@ require_once(COREPATH.'libraries/GitHubAPI.php');
 /* CLAUDE API ------------------------------------------- */
 require_once(COREPATH.'libraries/ClaudeAPI.php');
 
+/* OPENAI API ------------------------------------------- */
+require_once(COREPATH.'libraries/OpenAIAPI.php');
+
 /* MODELS ------------------------------------------- */
 require_once(APPPATH.'models/User.php');
 require_once(APPPATH.'models/Repository.php');
 require_once(APPPATH.'models/Issue.php');
 require_once(APPPATH.'models/Area.php');
+require_once(APPPATH.'models/AnalysisJob.php');
 
 /* ROUTER ------------------------------------------- */
 require_once(COREPATH.'libraries/Router.php');

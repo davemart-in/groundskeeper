@@ -96,7 +96,7 @@
                             <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAuditLoading()">
                                 <button type="submit" class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
                             </form>
-                            <form method="POST" action="<?php echo BASEURL; ?>analyze/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAnalyzeLoading()">
+                            <form id="analyze-form" method="POST" action="<?php echo BASEURL; ?>analyze/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline">
                                 <button type="submit" class="text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 px-2 py-0.5 rounded bg-blue-50"><i class="fa-solid fa-chart-line mr-1"></i> Re-analyze</button>
                             </form>
                         </div>
@@ -1576,5 +1576,185 @@
         </div>
     </div>
     <?php endif; ?>
+
+    <!-- Resume/Restart Analysis Modal -->
+    <div id="resume-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 shadow-xl max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">
+                <i class="fa-solid fa-pause-circle text-blue-600 mr-2"></i>
+                Incomplete Analysis Found
+            </h3>
+            <p class="text-sm text-slate-600 mb-4">
+                You have an incomplete analysis with <span id="resume-processed" class="font-semibold"></span> of <span id="resume-total" class="font-semibold"></span> issues processed.
+            </p>
+            <p class="text-sm text-slate-600 mb-6">
+                Would you like to continue from where you left off or start over?
+            </p>
+
+            <div class="flex gap-3">
+                <button id="restart-btn" class="flex-1 px-4 py-2 bg-slate-600 text-white rounded-md hover:bg-slate-700 font-medium">
+                    <i class="fa-solid fa-rotate-right mr-1"></i>
+                    Start Over
+                </button>
+                <button id="resume-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+                    <i class="fa-solid fa-play mr-1"></i>
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Progress Modal -->
+    <div id="progress-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 shadow-xl max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">
+                <i class="fa-solid fa-gear fa-spin text-blue-600 mr-2"></i>
+                Analyzing Issues
+            </h3>
+            <p class="text-sm text-slate-600 mb-4">
+                Processing issues with AI. This may take several minutes...
+            </p>
+
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-slate-700 mb-2">
+                    <span id="progress-text">Analyzing issues...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-3">
+                    <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-500 mb-4">
+                <span id="progress-count">0</span> of <span id="progress-total">0</span> issues processed
+            </p>
+
+            <div id="progress-error" class="hidden bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                <p class="text-sm text-red-700"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Analysis progress handling
+    const BASEURL = '<?php echo BASEURL; ?>';
+    let currentJobId = null;
+    let processingInterval = null;
+
+    // Analyze form submission
+    document.getElementById('analyze-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        startAnalysis(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
+    });
+
+    function startAnalysis(repoId) {
+        fetch(BASEURL + 'analyze/run/' + repoId, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.has_existing_job) {
+                showResumeModal(data.job_id, data.processed, data.total);
+            } else {
+                currentJobId = data.job_id;
+                startProcessing();
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Failed to start analysis');
+        });
+    }
+
+    function showResumeModal(jobId, processed, total) {
+        currentJobId = jobId;
+        document.getElementById('resume-processed').textContent = processed;
+        document.getElementById('resume-total').textContent = total;
+        document.getElementById('resume-modal').classList.remove('hidden');
+
+        document.getElementById('resume-btn').onclick = () => {
+            document.getElementById('resume-modal').classList.add('hidden');
+            startProcessing();
+        };
+
+        document.getElementById('restart-btn').onclick = () => {
+            document.getElementById('resume-modal').classList.add('hidden');
+            restartAnalysis(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
+        };
+    }
+
+    function restartAnalysis(repoId) {
+        fetch(BASEURL + 'analyze/run/' + repoId, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'force_restart=1'
+        })
+        .then(res => res.json())
+        .then(data => {
+            currentJobId = data.job_id;
+            startProcessing();
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Failed to restart analysis');
+        });
+    }
+
+    function startProcessing() {
+        document.getElementById('progress-modal').classList.remove('hidden');
+        processNextChunk();
+    }
+
+    function processNextChunk() {
+        fetch(BASEURL + 'analyze/process-chunk/' + currentJobId, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showError(data.error || 'Processing failed');
+                return;
+            }
+
+            updateProgress(data.processed, data.total, data.percent);
+
+            if (data.completed) {
+                completeAnalysis();
+            } else {
+                // Continue processing next chunk
+                setTimeout(() => processNextChunk(), 1000);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showError('Network error. Retrying...');
+            setTimeout(() => processNextChunk(), 5000);
+        });
+    }
+
+    function updateProgress(processed, total, percent) {
+        document.getElementById('progress-count').textContent = processed;
+        document.getElementById('progress-total').textContent = total;
+        document.getElementById('progress-percent').textContent = percent + '%';
+        document.getElementById('progress-bar').style.width = percent + '%';
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('progress-error');
+        errorDiv.querySelector('p').textContent = message;
+        errorDiv.classList.remove('hidden');
+    }
+
+    function completeAnalysis() {
+        document.getElementById('progress-text').textContent = 'Analysis complete!';
+        document.getElementById('progress-percent').textContent = '100%';
+        document.getElementById('progress-bar').style.width = '100%';
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    }
+    </script>
 </body>
 </html>
