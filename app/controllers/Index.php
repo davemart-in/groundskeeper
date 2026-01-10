@@ -58,6 +58,9 @@ if ($glob['selected_repo']) {
 /* LOAD ANALYSIS RESULTS ---- */
 $glob['analysis'] = $_SESSION['analysis_results'] ?? null;
 
+/* LOAD DUPLICATES ---- */
+$glob['duplicates'] = isset($_SESSION['analysis_results']['duplicates']) ? $_SESSION['analysis_results']['duplicates'] : [];
+
 /* LOAD PENDING AREAS ---- */
 $glob['pending_areas'] = $_SESSION['pending_areas'] ?? null;
 

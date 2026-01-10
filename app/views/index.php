@@ -161,7 +161,7 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-duplicates">47</span> Likely Duplicates</h4>
+                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-duplicates"><?php echo count($glob['duplicates']); ?></span> Likely Duplicates</h4>
                                     <p class="text-sm text-slate-500 mt-1">Issues that appear to be semantically similar.</p>
                                 </div>
                             </div>
@@ -659,7 +659,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Likely Duplicates</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found 47 issues that appear to duplicate existing bugs.</p>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['duplicates']); ?> groups of issues that appear semantically similar (≥85% similarity).</p>
                         </div>
                         <button onclick="closeModal('duplicates')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -688,94 +688,67 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
+                        <?php if (!empty($glob['duplicates'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-10"></th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">New Issue</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Suggested Duplicate Of</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Confidence</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Primary Issue</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Similar Issues</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Similarity</th>
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-slate-200">
-                                <!-- Row 1 -->
+                                <?php foreach ($glob['duplicates'] as $group):
+                                    $primary = $group['primary'];
+                                    $duplicates = $group['duplicates'];
+                                    $primaryTime = time() - $primary['created_at'];
+                                    $primaryTimeText = $primaryTime < 86400 ? floor($primaryTime/3600) . ' hours ago' : floor($primaryTime/86400) . ' days ago';
+                                ?>
+                                <?php foreach ($duplicates as $duplicate):
+                                    $dupTime = time() - $duplicate['created_at'];
+                                    $dupTimeText = $dupTime < 86400 ? floor($dupTime/3600) . ' hours ago' : floor($dupTime/86400) . ' days ago';
+                                    $similarityPercent = round($duplicate['similarity'] * 100);
+                                    $badgeClass = $similarityPercent >= 90 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                                ?>
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Checkout spins forever on iOS</div>
+                                        <div class="text-sm font-medium text-slate-900"><?php echo htmlspecialchars($primary['title']); ?></div>
                                         <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19422 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 2 days ago
+                                            <a href="<?php echo htmlspecialchars($primary['url']); ?>" target="_blank" class="hover:text-emerald-600 hover:underline">#<?php echo $primary['number']; ?> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                            • opened <?php echo $primaryTimeText; ?>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm text-slate-900 flex items-center gap-2">
                                             <i class="fa-solid fa-arrow-right-long text-slate-400"></i>
-                                            <a href="#" target="_blank" class="hover:underline text-emerald-700">#19401: Apple Pay timeout <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                            <div>
+                                                <a href="<?php echo htmlspecialchars($duplicate['url']); ?>" target="_blank" class="hover:underline text-emerald-700">#<?php echo $duplicate['number']; ?>: <?php echo htmlspecialchars(substr($duplicate['title'], 0, 50)); ?><?php echo strlen($duplicate['title']) > 50 ? '...' : ''; ?> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                                <div class="text-xs text-slate-400">opened <?php echo $dupTimeText; ?></div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">98% Match</span>
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $badgeClass; ?>"><?php echo $similarityPercent; ?>% Match</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 font-medium">Merge & close</button>
+                                        <a href="<?php echo htmlspecialchars($duplicate['url']); ?>" target="_blank" class="text-emerald-600 hover:text-emerald-900 font-medium">View</a>
                                     </td>
                                 </tr>
-                                <!-- Row 2 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Error 500 on Analytics page</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19455 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 5 hours ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm text-slate-900 flex items-center gap-2">
-                                            <i class="fa-solid fa-arrow-right-long text-slate-400"></i>
-                                            <a href="#" target="_blank" class="hover:underline text-emerald-700">#19200: Analytics data fetch fail <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">92% Match</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 font-medium">Merge & close</button>
-                                    </td>
-                                </tr>
-                                <!-- Row 3 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Typo in German translation</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#18999 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 1 week ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm text-slate-900 flex items-center gap-2">
-                                            <i class="fa-solid fa-arrow-right-long text-slate-400"></i>
-                                            <a href="#" target="_blank" class="hover:underline text-emerald-700">#18880: i18n corrections <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">75% Match</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-900 font-medium">Merge & close</button>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <?php else: ?>
+                        <div class="p-12 text-center text-slate-500">
+                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
+                            <p class="text-sm">No duplicate issues found. Run analysis to detect similar issues.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Footer Removed -->
