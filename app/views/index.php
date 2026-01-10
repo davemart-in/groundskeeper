@@ -221,17 +221,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-suggestions">544</span> Suggestions</h4>
-                                    <?php
-                                    $hasPriorityLabels = false;
-                                    if (isset($glob['selected_repo']['priority_labels']) && !empty($glob['selected_repo']['priority_labels'])) {
-                                        $priorityLabels = json_decode($glob['selected_repo']['priority_labels'], true);
-                                        $hasPriorityLabels = is_array($priorityLabels) && !empty($priorityLabels);
-                                    }
-                                    ?>
-                                    <p class="text-sm text-slate-500 mt-1">
-                                        <?php echo $hasPriorityLabels ? 'Recommended priority, status, and functionality label updates.' : 'Recommended status and functionality label updates.'; ?>
-                                    </p>
+                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-suggestions"><?php echo count($glob['label_suggestions']); ?></span> Label Suggestions</h4>
+                                    <p class="text-sm text-slate-500 mt-1">AI-recommended labels to improve categorization</p>
                                 </div>
                             </div>
                             <button onclick="openModal('suggestions')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
@@ -1108,8 +1099,8 @@
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
-                            <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Triage Suggestions</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found 544 issues where labels or priority can be inferred automatically.</p>
+                            <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Label Suggestions</h3>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['label_suggestions']); ?> issues with AI-recommended labels from the repository.</p>
                         </div>
                         <button onclick="closeModal('suggestions')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -1149,91 +1140,74 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-slate-200">
-                                <!-- Row 1 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Product images overlapping on mobile</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#18221 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 2 months ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="space-y-1">
-                                            <div class="flex items-center gap-2 text-xs">
-                                                <span class="text-slate-400">Add Label:</span>
-                                                <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">type: bug</span>
+                                <?php if (!empty($glob['label_suggestions'])): ?>
+                                    <?php foreach ($glob['label_suggestions'] as $issue):
+                                        $currentLabels = is_array($issue['labels']) ? $issue['labels'] : json_decode($issue['labels'], true);
+                                        if (!is_array($currentLabels)) $currentLabels = [];
+
+                                        $suggestedLabels = is_array($issue['suggested_labels']) ? $issue['suggested_labels'] : json_decode($issue['suggested_labels'], true);
+                                        if (!is_array($suggestedLabels)) $suggestedLabels = [];
+
+                                        $reasoning = $issue['label_reasoning'] ?? 'Recommended based on issue content';
+
+                                        $timeAgo = time() - $issue['created_at'];
+                                        if ($timeAgo < 3600) {
+                                            $timeText = floor($timeAgo / 60) . ' minutes ago';
+                                        } elseif ($timeAgo < 86400) {
+                                            $timeText = floor($timeAgo / 3600) . ' hours ago';
+                                        } elseif ($timeAgo < 2592000) {
+                                            $timeText = floor($timeAgo / 86400) . ' days ago';
+                                        } else {
+                                            $timeText = floor($timeAgo / 2592000) . ' months ago';
+                                        }
+                                    ?>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-slate-900"><?php echo htmlspecialchars($issue['title']); ?></div>
+                                            <div class="text-xs text-slate-500">
+                                                <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="hover:text-emerald-600 hover:underline">#<?php echo $issue['issue_number']; ?> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                                • opened <?php echo $timeText; ?>
                                             </div>
-                                            <div class="flex items-center gap-2 text-xs">
-                                                <span class="text-slate-400">Set Priority:</span>
-                                                <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200">Medium</span>
+                                            <?php if (!empty($currentLabels)): ?>
+                                                <div class="mt-2 flex flex-wrap gap-1">
+                                                    <span class="text-xs text-slate-400">Current:</span>
+                                                    <?php foreach (array_slice($currentLabels, 0, 2) as $label): ?>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600"><?php echo htmlspecialchars($label); ?></span>
+                                                    <?php endforeach; ?>
+                                                    <?php if (count($currentLabels) > 2): ?>
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-400">+<?php echo count($currentLabels) - 2; ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="space-y-1">
+                                                <?php foreach ($suggestedLabels as $label): ?>
+                                                    <div class="flex items-center gap-2 text-xs">
+                                                        <span class="text-slate-400">Add:</span>
+                                                        <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200"><?php echo htmlspecialchars($label); ?></span>
+                                                    </div>
+                                                <?php endforeach; ?>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        Visual regression detected
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-800 font-medium">Apply</button>
-                                    </td>
-                                </tr>
-                                <!-- Row 2 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">API returns 404 for valid order ID</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#19002 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 3 weeks ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="space-y-1">
-                                            <div class="flex items-center gap-2 text-xs">
-                                                <span class="text-slate-400">Add Label:</span>
-                                                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200">area: api</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        Endpoint URL in body
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-800 font-medium">Apply</button>
-                                    </td>
-                                </tr>
-                                <!-- Row 3 -->
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-slate-900">Documentation typo in readme</div>
-                                        <div class="text-xs text-slate-500">
-                                            <a href="#" target="_blank" class="hover:text-emerald-600 hover:underline">#18111 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
-                                            • opened 4 months ago
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="space-y-1">
-                                            <div class="flex items-center gap-2 text-xs">
-                                                <span class="text-slate-400">Set Priority:</span>
-                                                <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded border border-green-200">Low</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        Non-functional issue
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button class="text-emerald-600 hover:text-emerald-800 font-medium">Apply</button>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-500">
+                                            <?php echo htmlspecialchars(substr($reasoning, 0, 50)) . (strlen($reasoning) > 50 ? '...' : ''); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-medium">View</a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-12 text-center text-sm text-slate-500">
+                                            No label suggestions found.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

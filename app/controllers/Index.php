@@ -61,12 +61,19 @@ if ($glob['selected_repo']) {
 		return !empty($issue['is_missing_context']);
 	});
 	$glob['missing_info_issues'] = array_values($missingInfo);
+
+	/* GET LABEL SUGGESTIONS ---- */
+	$labelSuggestions = array_filter($glob['issues'], function($issue) {
+		return !empty($issue['is_missing_labels']) && !empty($issue['suggested_labels']);
+	});
+	$glob['label_suggestions'] = array_values($labelSuggestions);
 } else {
 	$glob['issues'] = [];
 	$glob['area_stats'] = [];
 	$glob['high_signal_issues'] = [];
 	$glob['cleanup_candidates'] = [];
 	$glob['missing_info_issues'] = [];
+	$glob['label_suggestions'] = [];
 }
 
 /* LOAD ANALYSIS RESULTS ---- */
