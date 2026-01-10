@@ -49,10 +49,17 @@ if ($glob['selected_repo']) {
 		return !empty($issue['is_high_signal']);
 	});
 	$glob['high_signal_issues'] = array_values($highSignalIssues);
+
+	/* GET CLEANUP CANDIDATES ---- */
+	$cleanupCandidates = array_filter($glob['issues'], function($issue) {
+		return !empty($issue['is_cleanup_candidate']);
+	});
+	$glob['cleanup_candidates'] = array_values($cleanupCandidates);
 } else {
 	$glob['issues'] = [];
 	$glob['area_stats'] = [];
 	$glob['high_signal_issues'] = [];
+	$glob['cleanup_candidates'] = [];
 }
 
 /* LOAD ANALYSIS RESULTS ---- */
