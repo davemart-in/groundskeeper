@@ -392,10 +392,9 @@
                             </div>
                         <?php endif; ?>
 
+                        <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                         <!-- Config Form -->
                         <div class="space-y-8">
-
-                            <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                             <!-- Access Mode Section -->
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
                                 <h3 class="text-sm font-bold text-slate-900 mb-3">Access Mode</h3>
@@ -503,9 +502,7 @@
                                 <?php endif; ?>
                             </div>
 
-                            <?php endif; ?>
-
-                            <?php if (!empty($glob['repositories']) && isset($glob['selected_repo']) && $glob['selected_repo']['last_synced_at']): ?>
+                            <?php if ($glob['selected_repo']['last_synced_at']): ?>
                             <!-- Labels Section -->
                             <div>
                                 <h3 class="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">Label Mapping</h3>
@@ -574,7 +571,6 @@
                             </div>
                             <?php endif; ?>
                         </div>
-                    <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                     </div>
                     <?php endif; ?>
                 </div>

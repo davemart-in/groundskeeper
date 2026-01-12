@@ -288,6 +288,16 @@ if ($selectedRepo) {
     $glob['areas'] = [];
 }
 
+// Initialize dashboard variables (needed by index.php view even when on Settings tab)
+$glob['area_stats'] = [];
+$glob['high_signal_issues'] = [];
+$glob['cleanup_candidates'] = [];
+$glob['missing_info_issues'] = [];
+$glob['label_suggestions'] = [];
+$glob['duplicates'] = [];
+$glob['analysis'] = null;
+$glob['pending_areas'] = null;
+
 // Pass user data to view
 $glob['user'] = $user ? $user->toArray() : null;
 
