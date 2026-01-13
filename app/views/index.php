@@ -778,8 +778,9 @@
                             <span class="text-sm text-slate-500">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Assign to Me
+                             <button onclick="copySelectedIssueUrls('high-signal')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                                <i class="fa-solid fa-copy mr-1.5"></i>
+                                Copy Issue URLs
                             </button>
                         </div>
                     </div>
@@ -1289,6 +1290,41 @@
 
         function closeModal(modalId) {
             document.getElementById(`modal-${modalId}`).classList.add('hidden');
+        }
+
+        function copySelectedIssueUrls(modalId) {
+            // Get all checked checkboxes in this modal
+            const modal = document.getElementById(`modal-${modalId}`);
+            const checkboxes = modal.querySelectorAll('tbody input[type="checkbox"]:checked');
+
+            if (checkboxes.length === 0) {
+                showToast('Please select at least one issue to copy', true);
+                return;
+            }
+
+            // Extract URLs from the table rows
+            const urls = [];
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const link = row.querySelector('a[href*="github.com"]');
+                if (link) {
+                    urls.push(link.href);
+                }
+            });
+
+            if (urls.length === 0) {
+                showToast('No URLs found for selected issues', true);
+                return;
+            }
+
+            // Copy to clipboard
+            const urlText = urls.join('\n');
+            navigator.clipboard.writeText(urlText).then(() => {
+                showToast(`Copied ${urls.length} issue URL${urls.length > 1 ? 's' : ''} to clipboard`);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Failed to copy to clipboard', true);
+            });
         }
 
         function toggleAreas() {
