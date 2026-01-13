@@ -657,11 +657,11 @@
                     <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                         <div class="flex items-center gap-4">
                             <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                <input type="checkbox" id="select-all-duplicates" onchange="toggleSelectAll('duplicates')" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                 <span class="ml-2 text-sm text-slate-600 font-medium">Select All</span>
                             </label>
                             <span class="h-4 w-px bg-slate-300 mx-2"></span>
-                            <span class="text-sm text-slate-500">2 selected</span>
+                            <span class="text-sm text-slate-500" id="selected-count-duplicates">0 selected</span>
                         </div>
                         <div class="flex gap-2">
                              <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
@@ -771,11 +771,11 @@
                     <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                         <div class="flex items-center gap-4">
                             <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                <input type="checkbox" id="select-all-high-signal" onchange="toggleSelectAll('high-signal')" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                 <span class="ml-2 text-sm text-slate-600 font-medium">Select All</span>
                             </label>
                             <span class="h-4 w-px bg-slate-300 mx-2"></span>
-                            <span class="text-sm text-slate-500">0 selected</span>
+                            <span class="text-sm text-slate-500" id="selected-count-high-signal">0 selected</span>
                         </div>
                         <div class="flex gap-2">
                              <button onclick="copySelectedIssueUrls('high-signal')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
@@ -919,11 +919,11 @@
                     <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                         <div class="flex items-center gap-4">
                             <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                <input type="checkbox" id="select-all-cleanup" onchange="toggleSelectAll('cleanup')" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                 <span class="ml-2 text-sm text-slate-600 font-medium">Select All</span>
                             </label>
                             <span class="h-4 w-px bg-slate-300 mx-2"></span>
-                            <span class="text-sm text-slate-500">0 selected</span>
+                            <span class="text-sm text-slate-500" id="selected-count-cleanup">0 selected</span>
                         </div>
                         <div class="flex gap-2">
                              <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
@@ -1032,11 +1032,11 @@
                     <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                         <div class="flex items-center gap-4">
                             <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                <input type="checkbox" id="select-all-missing-info" onchange="toggleSelectAll('missing-info')" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                 <span class="ml-2 text-sm text-slate-600 font-medium">Select All</span>
                             </label>
                             <span class="h-4 w-px bg-slate-300 mx-2"></span>
-                            <span class="text-sm text-slate-500">0 selected</span>
+                            <span class="text-sm text-slate-500" id="selected-count-missing-info">0 selected</span>
                         </div>
                         <div class="flex gap-2">
                              <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
@@ -1150,11 +1150,11 @@
                     <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                         <div class="flex items-center gap-4">
                             <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                <input type="checkbox" id="select-all-suggestions" onchange="toggleSelectAll('suggestions')" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
                                 <span class="ml-2 text-sm text-slate-600 font-medium">Select All</span>
                             </label>
                             <span class="h-4 w-px bg-slate-300 mx-2"></span>
-                            <span class="text-sm text-slate-500">0 selected</span>
+                            <span class="text-sm text-slate-500" id="selected-count-suggestions">0 selected</span>
                         </div>
                         <div class="flex gap-2">
                              <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
@@ -1290,6 +1290,22 @@
 
         function closeModal(modalId) {
             document.getElementById(`modal-${modalId}`).classList.add('hidden');
+        }
+
+        function toggleSelectAll(modalId) {
+            const selectAllCheckbox = document.getElementById(`select-all-${modalId}`);
+            const modal = document.getElementById(`modal-${modalId}`);
+            const checkboxes = modal.querySelectorAll('tbody input[type="checkbox"]');
+            const selectedCountEl = document.getElementById(`selected-count-${modalId}`);
+
+            // Toggle all checkboxes based on the "Select All" state
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+
+            // Update count
+            const count = selectAllCheckbox.checked ? checkboxes.length : 0;
+            selectedCountEl.textContent = `${count} selected`;
         }
 
         function copySelectedIssueUrls(modalId) {
