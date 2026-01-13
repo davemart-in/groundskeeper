@@ -296,7 +296,7 @@ $glob['missing_info_issues'] = [];
 $glob['label_suggestions'] = [];
 $glob['duplicates'] = [];
 $glob['analysis'] = null;
-$glob['pending_areas'] = null;
+$glob['pending_areas'] = $_SESSION['pending_areas'] ?? null;
 
 // Pass user data to view
 $glob['user'] = $user ? $user->toArray() : null;

@@ -83,6 +83,14 @@ $glob['analysis'] = $_SESSION['analysis_results'] ?? null;
 $glob['duplicates'] = isset($_SESSION['analysis_results']['duplicates']) ? $_SESSION['analysis_results']['duplicates'] : [];
 
 /* LOAD PENDING AREAS ---- */
+// Clear pending areas if areas already exist for this repo
+if (isset($_SESSION['pending_areas']) && $glob['selected_repo']) {
+    $areaModel = new Area();
+    $existingAreas = $areaModel->findByRepository($glob['selected_repo']['id']);
+    if (!empty($existingAreas)) {
+        unset($_SESSION['pending_areas']);
+    }
+}
 $glob['pending_areas'] = $_SESSION['pending_areas'] ?? null;
 
 /* LOAD VIEW ---- */

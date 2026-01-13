@@ -1052,7 +1052,12 @@ $areaContext
 $labelContext
 
 For each issue, determine:
-1. is_high_signal (bool): Is this a valuable, actionable issue worth prioritizing?
+1. is_high_signal (bool): Mark as true ONLY if the issue meets 2 or more of these criteria:
+   - Affects core functionality, causes crashes, data loss, or creates security vulnerabilities
+   - Has widespread user impact (mentioned by multiple users or indicates systemic problem)
+   - Blocks other development work or creates significant performance issues
+   - Represents a quick win with high value (relatively easy fix with major impact)
+   - Do NOT mark as high signal: feature requests, minor bugs, cosmetic issues, nice-to-haves, documentation updates
 2. is_cleanup_candidate (bool): Should this issue be closed (stale, duplicate, not actionable)?
 3. is_missing_context (bool): Does it lack critical information?
 4. missing_elements (array): What specific information is missing (e.g., \"steps to reproduce\", \"error logs\")?
