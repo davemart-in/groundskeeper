@@ -580,14 +580,14 @@
     <!-- MODAL: Add Repo -->
     <div id="modal-add-repo" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal('add-repo')"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
 
         <!-- Fixed wrapper for centering -->
-        <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="fixed inset-0 z-10 overflow-y-auto" onclick="closeModal('add-repo')">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                
+
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg" onclick="event.stopPropagation()">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -633,14 +633,14 @@
     <!-- MODAL: Bulk Action View -->
     <div id="modal-duplicates" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal('duplicates')"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
 
         <!-- Fixed wrapper for centering -->
-        <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="fixed inset-0 z-10 overflow-y-auto" onclick="closeModal('duplicates')">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                
+
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl" onclick="event.stopPropagation()">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -747,14 +747,14 @@
     <!-- MODAL: High Signal Issues -->
     <div id="modal-high-signal" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal('high-signal')"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
 
         <!-- Fixed wrapper for centering -->
-        <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="fixed inset-0 z-10 overflow-y-auto" onclick="closeModal('high-signal')">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                
+
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl" onclick="event.stopPropagation()">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -895,14 +895,14 @@
     <!-- MODAL: Cleanup Candidates -->
     <div id="modal-cleanup" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal('cleanup')"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
 
         <!-- Fixed wrapper for centering -->
-        <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="fixed inset-0 z-10 overflow-y-auto" onclick="closeModal('cleanup')">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                
+
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl" onclick="event.stopPropagation()">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -1008,14 +1008,14 @@
     <!-- MODAL: Missing Info -->
     <div id="modal-missing-info" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal('missing-info')"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
 
         <!-- Fixed wrapper for centering -->
-        <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="fixed inset-0 z-10 overflow-y-auto" onclick="closeModal('missing-info')">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                
+
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl" onclick="event.stopPropagation()">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -1126,14 +1126,14 @@
     <!-- MODAL: Suggestions -->
     <div id="modal-suggestions" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal('suggestions')"></div>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
 
         <!-- Fixed wrapper for centering -->
-        <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="fixed inset-0 z-10 overflow-y-auto" onclick="closeModal('suggestions')">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                
+
                 <!-- Modal Panel -->
-                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl" onclick="event.stopPropagation()">
                     
                     <!-- Modal Header -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
