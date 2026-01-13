@@ -48,6 +48,66 @@ if ($glob['selected_repo']) {
 	$highSignalIssues = array_filter($glob['issues'], function($issue) {
 		return !empty($issue['is_high_signal']);
 	});
+
+	// Calculate priority score for each high signal issue
+	foreach ($highSignalIssues as &$issue) {
+		$score = 0;
+
+		// Factor 1: Community engagement (max 40 points)
+		$engagement = ($issue['reactions_total'] ?? 0) + ($issue['comments_count'] ?? 0);
+		$score += min(40, $engagement * 2);
+
+		// Factor 2: Age (newer issues get more points, max 25 points)
+		$age = time() - $issue['created_at'];
+		$daysOld = $age / 86400;
+		if ($daysOld < 7) {
+			$score += 25; // Very recent
+		} elseif ($daysOld < 30) {
+			$score += 20; // Recent
+		} elseif ($daysOld < 90) {
+			$score += 15; // Moderate
+		} elseif ($daysOld < 180) {
+			$score += 10; // Aging
+		} else {
+			$score += 5; // Old but still high signal
+		}
+
+		// Factor 3: Has assignee (shows active work, max 15 points)
+		if (!empty($issue['assignees']) && count($issue['assignees']) > 0) {
+			$score += 15;
+		}
+
+		// Factor 4: Has milestone (shows planning/prioritization, max 10 points)
+		if (!empty($issue['milestone'])) {
+			$score += 10;
+		}
+
+		// Factor 5: Label signals (max 10 points)
+		$labels = is_array($issue['labels']) ? $issue['labels'] : [];
+		$priorityLabels = ['critical', 'urgent', 'high priority', 'p0', 'p1', 'blocker', 'security'];
+		$hasPriorityLabel = false;
+		foreach ($labels as $label) {
+			$labelLower = strtolower($label);
+			foreach ($priorityLabels as $priorityLabel) {
+				if (strpos($labelLower, $priorityLabel) !== false) {
+					$hasPriorityLabel = true;
+					break 2;
+				}
+			}
+		}
+		if ($hasPriorityLabel) {
+			$score += 10;
+		}
+
+		$issue['priority_score'] = min(100, $score);
+	}
+	unset($issue);
+
+	// Sort by priority score (highest first)
+	usort($highSignalIssues, function($a, $b) {
+		return $b['priority_score'] - $a['priority_score'];
+	});
+
 	$glob['high_signal_issues'] = array_values($highSignalIssues);
 
 	/* GET CLEANUP CANDIDATES ---- */

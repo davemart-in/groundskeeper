@@ -791,9 +791,9 @@
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-10"></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Priority</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Issue</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Labels</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Comments</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Engagement</th>
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
@@ -805,10 +805,53 @@
                                     $timeText = $timeAgo < 3600 ? floor($timeAgo/60) . ' minutes ago' :
                                                ($timeAgo < 86400 ? floor($timeAgo/3600) . ' hours ago' :
                                                floor($timeAgo/86400) . ' days ago');
+
+                                    // Priority score visualization
+                                    $priorityScore = $issue['priority_score'] ?? 0;
+                                    $priorityClass = '';
+                                    $priorityBg = '';
+                                    $priorityText = '';
+                                    $priorityIcon = '';
+
+                                    if ($priorityScore >= 80) {
+                                        $priorityClass = 'bg-red-100 text-red-800 border-red-200';
+                                        $priorityBg = 'bg-red-500';
+                                        $priorityText = 'Critical';
+                                        $priorityIcon = 'fa-fire';
+                                    } elseif ($priorityScore >= 60) {
+                                        $priorityClass = 'bg-orange-100 text-orange-800 border-orange-200';
+                                        $priorityBg = 'bg-orange-500';
+                                        $priorityText = 'High';
+                                        $priorityIcon = 'fa-chevron-up';
+                                    } elseif ($priorityScore >= 40) {
+                                        $priorityClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                                        $priorityBg = 'bg-yellow-500';
+                                        $priorityText = 'Medium';
+                                        $priorityIcon = 'fa-minus';
+                                    } else {
+                                        $priorityClass = 'bg-blue-100 text-blue-800 border-blue-200';
+                                        $priorityBg = 'bg-blue-500';
+                                        $priorityText = 'Standard';
+                                        $priorityIcon = 'fa-info-circle';
+                                    }
+
+                                    $engagement = ($issue['reactions_total'] ?? 0) + ($issue['comments_count'] ?? 0);
                                 ?>
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border <?php echo $priorityClass; ?>">
+                                                <i class="fa-solid <?php echo $priorityIcon; ?>"></i>
+                                                <?php echo $priorityText; ?>
+                                            </span>
+                                            <span class="text-xs font-medium text-slate-500"><?php echo $priorityScore; ?></span>
+                                        </div>
+                                        <div class="mt-1.5 w-20 bg-slate-200 rounded-full h-1.5">
+                                            <div class="<?php echo $priorityBg; ?> h-1.5 rounded-full" style="width: <?php echo $priorityScore; ?>%"></div>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-medium text-slate-900"><?php echo htmlspecialchars($issue['title']); ?></div>
@@ -817,18 +860,17 @@
                                             • opened <?php echo $timeText; ?>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-2">
-                                            <?php foreach (array_slice($labels, 0, 3) as $label): ?>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700"><?php echo htmlspecialchars($label); ?></span>
-                                            <?php endforeach; ?>
-                                            <?php if (count($labels) > 3): ?>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-500">+<?php echo count($labels) - 3; ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="text-sm text-slate-700"><?php echo $issue['comments_count']; ?></span>
+                                        <div class="flex items-center gap-3 text-sm text-slate-600">
+                                            <span class="flex items-center gap-1" title="Reactions">
+                                                <i class="fa-solid fa-heart text-slate-400 text-xs"></i>
+                                                <?php echo $issue['reactions_total'] ?? 0; ?>
+                                            </span>
+                                            <span class="flex items-center gap-1" title="Comments">
+                                                <i class="fa-solid fa-comment text-slate-400 text-xs"></i>
+                                                <?php echo $issue['comments_count'] ?? 0; ?>
+                                            </span>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="<?php echo htmlspecialchars($issue['url']); ?>" target="_blank" class="text-emerald-600 hover:text-emerald-900 font-medium">View</a>
