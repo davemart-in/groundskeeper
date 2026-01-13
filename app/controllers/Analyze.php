@@ -1193,7 +1193,7 @@ function findDuplicates($repoId) {
     }
 
     $duplicates = [];
-    $threshold = 0.85;
+    $threshold = 0.75; // Lowered from 0.85 to catch more potential duplicates
     $processed = [];
 
     for ($i = 0; $i < count($issues); $i++) {
@@ -1217,12 +1217,21 @@ function findDuplicates($repoId) {
             $similarity = cosineSimilarity($embedding1, $embedding2);
 
             if ($similarity >= $threshold) {
+                // Categorize by confidence level
+                $confidence = 'medium';
+                if ($similarity >= 0.85) {
+                    $confidence = 'high';
+                } else if ($similarity >= 0.90) {
+                    $confidence = 'very_high';
+                }
+
                 $similarIssues[] = [
                     'id' => $issues[$j]['id'],
                     'number' => $issues[$j]['issue_number'],
                     'title' => $issues[$j]['title'],
                     'url' => $issues[$j]['url'],
                     'similarity' => $similarity,
+                    'confidence' => $confidence,
                     'created_at' => $issues[$j]['created_at']
                 ];
                 $processed[$issues[$j]['id']] = true;
@@ -1230,6 +1239,11 @@ function findDuplicates($repoId) {
         }
 
         if (!empty($similarIssues)) {
+            // Sort by similarity (highest first)
+            usort($similarIssues, function($a, $b) {
+                return $b['similarity'] <=> $a['similarity'];
+            });
+
             $duplicates[] = [
                 'primary' => [
                     'id' => $issues[$i]['id'],
