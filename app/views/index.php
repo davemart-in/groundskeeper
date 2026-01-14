@@ -25,10 +25,6 @@
             }
         }
     </script>
-    <style>
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -664,12 +660,27 @@
                             <span class="text-sm text-slate-500" id="selected-count-duplicates">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Dismiss
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Merge & Close Selected
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <?php else: ?>
+                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Dismiss
                             </button>
                             <button class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Merge & Close Selected
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -926,12 +937,27 @@
                             <span class="text-sm text-slate-500" id="selected-count-cleanup">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Ignore
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Close Selected
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <?php else: ?>
+                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Ignore
                             </button>
                             <button class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Close Selected
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -1039,9 +1065,18 @@
                             <span class="text-sm text-slate-500" id="selected-count-missing-info">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Request Info (AI Draft)
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <?php else: ?>
+                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Request Info (AI Draft)
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -1157,12 +1192,27 @@
                             <span class="text-sm text-slate-500" id="selected-count-suggestions">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Dismiss
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <div class="tooltip-wrapper">
+                                <button disabled class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
+                                    Apply Selected
+                                </button>
+                                <span class="tooltip-text">Disabled in read-only mode</span>
+                            </div>
+                            <?php else: ?>
+                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Dismiss
                             </button>
                             <button class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
                                 Apply Selected
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
 
