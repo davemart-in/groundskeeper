@@ -220,8 +220,19 @@ if (is_numeric($segment1) && $segment2 === 'delete' && $_SERVER['REQUEST_METHOD'
     }
 
     try {
+        // Delete all related data first (cascading delete)
+        $issueModel = new Issue();
+        $areaModel = new Area();
+        $analysisJobModel = new AnalysisJob();
+
+        $issueModel->deleteByRepository($repoId);
+        $areaModel->deleteByRepository($repoId);
+        $analysisJobModel->deleteByRepository($repoId);
+
+        // Finally delete the repository itself
         $repoModel->delete($repoId);
-        $_SESSION['success'] = 'Repository removed successfully!';
+
+        $_SESSION['success'] = 'Repository and all related data removed successfully!';
     } catch (Exception $e) {
         error_log('Delete repo error: ' . $e->getMessage());
         $_SESSION['error'] = 'Failed to remove repository';

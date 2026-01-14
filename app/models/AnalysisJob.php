@@ -114,6 +114,17 @@ class AnalysisJob {
     }
 
     /**
+     * Delete all jobs for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return bool Success status
+     */
+    public function deleteByRepository($repositoryId) {
+        $sql = "DELETE FROM analysis_jobs WHERE repository_id = ?";
+        return $this->db->execute($sql, [$repositoryId]);
+    }
+
+    /**
      * Convert database row to array
      *
      * @param array $row Database row
