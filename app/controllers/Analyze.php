@@ -6,6 +6,12 @@
  * Handles repository analysis operations
  */
 
+// If this file is being loaded just for function definitions, skip all routing
+if (isset($GLOBALS['LOADING_FUNCTIONS_ONLY']) && $GLOBALS['LOADING_FUNCTIONS_ONLY']) {
+    // Skip all route handling, just load the function definitions below
+    goto FUNCTION_DEFINITIONS;
+}
+
 $repoModel = new Repository();
 $issueModel = new Issue();
 $areaModel = new Area();
@@ -226,6 +232,9 @@ if ($segment1 === 'status' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'
     ]);
     exit;
 }
+
+// Label for goto when loading functions only
+FUNCTION_DEFINITIONS:
 
 /**
  * Run all analysis processes on issues
@@ -1002,7 +1011,15 @@ function sanitizeText($text) {
     $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
 
     // Remove invalid UTF-8 sequences
-    return iconv('UTF-8', 'UTF-8//IGNORE', $text);
+    $result = iconv('UTF-8', 'UTF-8//IGNORE', $text);
+
+    // If iconv fails, return the original text (it might still work)
+    if ($result === false) {
+        error_log("sanitizeText: iconv failed, returning preg_replace result");
+        return $text;
+    }
+
+    return $result;
 }
 
 /**
@@ -1082,8 +1099,9 @@ Return ONLY a JSON array of objects with this exact format:
   \"summary\": \"Brief summary here...\"
 }]";
 
-    // Final sanitization - ensure entire prompt is valid UTF-8
-    $prompt = sanitizeText($prompt);
+    // Fix any remaining UTF-8 issues without using iconv (which strips everything)
+    $prompt = mb_convert_encoding($prompt, 'UTF-8', 'UTF-8');
+    error_log("analyzeIssueBatch: Prompt length: " . strlen($prompt) . " chars");
 
     $messages = [
         ['role' => 'user', 'content' => $prompt]
@@ -1092,12 +1110,13 @@ Return ONLY a JSON array of objects with this exact format:
     $response = $openai->getChatText($messages, null, 2000);
 
     if (!$response) {
+        error_log("analyzeIssueBatch: No response from OpenAI API");
         return false;
     }
 
     $json = extractJSON($response);
     if (!$json) {
-        error_log("analyzeIssueBatch: Failed to extract JSON from response");
+        error_log("analyzeIssueBatch: Failed to extract JSON from response. Response was: " . substr($response, 0, 500));
         return false;
     }
 
@@ -1261,6 +1280,8 @@ function findDuplicates($repoId) {
     return $duplicates;
 }
 
-// If we get here, invalid route
-redirect('');
-exit;
+// If we get here, invalid route (unless we're just loading functions)
+if (!isset($GLOBALS['LOADING_FUNCTIONS_ONLY']) || !$GLOBALS['LOADING_FUNCTIONS_ONLY']) {
+    redirect('');
+    exit;
+}

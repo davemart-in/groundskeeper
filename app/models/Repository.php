@@ -125,7 +125,7 @@ class Repository {
             $params[] = $data['last_synced_at'];
         }
 
-        if (isset($data['last_audited_at'])) {
+        if (array_key_exists('last_audited_at', $data)) {
             $updates[] = 'last_audited_at = ?';
             $params[] = $data['last_audited_at'];
         }

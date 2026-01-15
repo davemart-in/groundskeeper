@@ -89,11 +89,8 @@
                         <div class="flex items-center gap-2 text-sm text-slate-700">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Last audited <?php echo date('M j, Y', $glob['selected_repo']['last_audited_at']); ?>
-                            <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAuditLoading()">
-                                <button type="submit" class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-rotate mr-1"></i> Re-audit</button>
-                            </form>
-                            <form id="analyze-form" method="POST" action="<?php echo BASEURL; ?>analyze/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline">
-                                <button type="submit" class="text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 px-2 py-0.5 rounded bg-blue-50"><i class="fa-solid fa-chart-line mr-1"></i> Re-analyze</button>
+                            <form id="sync-form" method="POST" action="<?php echo BASEURL; ?>sync/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline">
+                                <button type="submit" class="ml-2 text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 px-2 py-0.5 rounded bg-blue-50"><i class="fa-solid fa-arrows-rotate mr-1"></i> Update issues and re-analyze</button>
                             </form>
                         </div>
                     <?php endif; ?>
@@ -101,8 +98,9 @@
                 <?php endif; ?>
             </div>
 
+            <?php if (!empty($glob['issues'])): ?>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <!-- Left Column: The Findings Feed -->
                 <div class="lg:col-span-2 space-y-4">
                     <div id="analysis-header" class="flex items-center gap-2">
@@ -314,6 +312,7 @@
 
                 </div>
             </div>
+            <?php endif; ?>
         </div>
 
         <!-- SETTINGS TAB -->
@@ -367,11 +366,16 @@
                                     </div>
                                     <p class="text-sm text-slate-500 mt-1">Manage how Groundskeeper interacts with this repo.</p>
                                 </div>
-                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/delete" onsubmit="return confirm('Are you sure you want to remove this repository?');">
-                                    <button type="submit" class="text-sm text-red-600 hover:text-red-700 font-medium">
-                                        <i class="fa-solid fa-trash mr-1"></i> Remove
-                                    </button>
-                                </form>
+                                <div class="flex gap-3">
+                                    <a href="<?php echo BASEURL; ?>reset/<?php echo $glob['selected_repo']['id']; ?>" class="text-sm text-yellow-600 hover:text-yellow-700 font-medium">
+                                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Data
+                                    </a>
+                                    <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/delete" onsubmit="return confirm('Are you sure you want to remove this repository?');">
+                                        <button type="submit" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                                            <i class="fa-solid fa-trash mr-1"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         <?php else: ?>
                             <!-- No repos - show blank slate -->
@@ -1609,20 +1613,44 @@
         </div>
     </div>
 
-    <!-- Analysis Progress Modal -->
+    <!-- Unified Progress Modal -->
     <div id="progress-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-8 shadow-xl max-w-md w-full mx-4">
             <h3 class="text-lg font-semibold text-slate-900 mb-4">
-                <i class="fa-solid fa-gear fa-spin text-blue-600 mr-2"></i>
-                Analyzing Issues
+                <i id="progress-icon" class="fa-solid fa-arrows-rotate fa-spin text-blue-600 mr-2"></i>
+                <span id="progress-title">Syncing & Analyzing</span>
             </h3>
-            <p class="text-sm text-slate-600 mb-4">
-                Processing issues with AI. This may take several minutes...
+            <p id="progress-description" class="text-sm text-slate-600 mb-4">
+                Processing repository changes. This may take several minutes...
             </p>
+
+            <!-- Step Indicators -->
+            <div class="mb-6 flex items-center justify-between">
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-sync-icon" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm mb-1">
+                        <i class="fa-solid fa-sync fa-spin"></i>
+                    </div>
+                    <span class="text-xs text-slate-600">Sync</span>
+                </div>
+                <div class="flex-1 h-0.5 bg-slate-200 mx-2" id="step-line-1"></div>
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-areas-icon" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-sm mb-1">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <span class="text-xs text-slate-600">Areas</span>
+                </div>
+                <div class="flex-1 h-0.5 bg-slate-200 mx-2" id="step-line-2"></div>
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step-analyze-icon" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-sm mb-1">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <span class="text-xs text-slate-600">Analyze</span>
+                </div>
+            </div>
 
             <div class="mb-4">
                 <div class="flex justify-between text-sm text-slate-700 mb-2">
-                    <span id="progress-text">Analyzing issues...</span>
+                    <span id="progress-text">Starting sync...</span>
                     <span id="progress-percent">0%</span>
                 </div>
                 <div class="w-full bg-slate-200 rounded-full h-3">
@@ -1630,7 +1658,7 @@
                 </div>
             </div>
 
-            <p class="text-xs text-slate-500 mb-4">
+            <p id="progress-details" class="text-xs text-slate-500 mb-4">
                 <span id="progress-count">0</span> of <span id="progress-total">0</span> issues processed
             </p>
 
@@ -1641,108 +1669,255 @@
     </div>
 
     <script>
-    // Analysis progress handling
+    // Unified sync & analysis progress handling
     const BASEURL = '<?php echo BASEURL; ?>';
     let currentJobId = null;
-    let processingInterval = null;
+    let currentStep = 'sync'; // sync, areas, analyze
 
-    // Analyze form submission
-    document.getElementById('analyze-form')?.addEventListener('submit', function(e) {
+    // Sync form submission
+    document.getElementById('sync-form')?.addEventListener('submit', function(e) {
         e.preventDefault();
-        startAnalysis(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
+        startSync(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
     });
 
-    function startAnalysis(repoId) {
-        fetch(BASEURL + 'analyze/run/' + repoId, {
+    function startSync(repoId) {
+        fetch(BASEURL + 'sync/run/' + repoId, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         })
         .then(res => res.json())
         .then(data => {
+            if (!data.success) {
+                alert('Failed to start sync: ' + (data.error || 'Unknown error'));
+                return;
+            }
+
             if (data.has_existing_job) {
-                showResumeModal(data.job_id, data.processed, data.total);
+                showResumeModal(data.job_id, data.status, data.processed, data.total);
             } else {
                 currentJobId = data.job_id;
-                startProcessing();
+                currentStep = 'sync';
+                showProgressModal();
+                processSyncStep();
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            alert('Failed to start analysis');
+            alert('Failed to start sync');
         });
     }
 
-    function showResumeModal(jobId, processed, total) {
-        currentJobId = jobId;
-        document.getElementById('resume-processed').textContent = processed;
-        document.getElementById('resume-total').textContent = total;
-        document.getElementById('resume-modal').classList.remove('hidden');
-
-        document.getElementById('resume-btn').onclick = () => {
-            document.getElementById('resume-modal').classList.add('hidden');
-            startProcessing();
-        };
-
-        document.getElementById('restart-btn').onclick = () => {
-            document.getElementById('resume-modal').classList.add('hidden');
-            restartAnalysis(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
-        };
-    }
-
-    function restartAnalysis(repoId) {
-        fetch(BASEURL + 'analyze/run/' + repoId, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'force_restart=1'
-        })
-        .then(res => res.json())
-        .then(data => {
-            currentJobId = data.job_id;
-            startProcessing();
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Failed to restart analysis');
-        });
-    }
-
-    function startProcessing() {
+    function showProgressModal() {
+        resetStepIndicators();
         document.getElementById('progress-modal').classList.remove('hidden');
-        processNextChunk();
     }
 
-    function processNextChunk() {
-        fetch(BASEURL + 'analyze/process-chunk/' + currentJobId, {
+    // Helper functions for step indicators
+    function setStepIcon(stepId, state, icon, spinning = false) {
+        const baseClass = 'w-8 h-8 rounded-full flex items-center justify-center text-sm mb-1';
+        const stateClasses = {
+            inactive: 'bg-slate-200 text-slate-400',
+            active: 'bg-blue-600 text-white',
+            complete: 'bg-emerald-600 text-white'
+        };
+        const el = document.getElementById(`step-${stepId}-icon`);
+        el.className = `${baseClass} ${stateClasses[state]}`;
+        el.innerHTML = `<i class="fa-solid fa-${icon}${spinning ? ' fa-spin' : ''}"></i>`;
+    }
+
+    function setStepLine(lineId, complete) {
+        document.getElementById(`step-line-${lineId}`).className =
+            `flex-1 h-0.5 ${complete ? 'bg-emerald-600' : 'bg-slate-200'} mx-2`;
+    }
+
+    function resetStepIndicators() {
+        setStepIcon('sync', 'inactive', 'sync');
+        setStepIcon('areas', 'inactive', 'layer-group');
+        setStepIcon('analyze', 'inactive', 'chart-line');
+        setStepLine(1, false);
+        setStepLine(2, false);
+    }
+
+    function updateStepIndicator(step) {
+        if (step === 'sync') {
+            setStepIcon('sync', 'active', 'sync');
+        } else if (step === 'areas') {
+            setStepIcon('sync', 'complete', 'check');
+            setStepLine(1, true);
+            setStepIcon('areas', 'active', 'layer-group');
+        } else if (step === 'analyze') {
+            setStepIcon('sync', 'complete', 'check');
+            setStepLine(1, true);
+            setStepIcon('areas', 'complete', 'check');
+            setStepLine(2, true);
+            setStepIcon('analyze', 'active', 'chart-line');
+        }
+    }
+
+    function processSyncStep() {
+        updateStepIndicator('sync');
+        document.getElementById('progress-text').textContent = 'Syncing issues from GitHub...';
+        document.getElementById('progress-percent').textContent = '33%';
+        document.getElementById('progress-bar').style.width = '33%';
+        document.getElementById('progress-details').textContent = 'Comparing local and remote issues...';
+
+        fetch(BASEURL + 'sync/process-sync/' + currentJobId, {
             method: 'POST'
         })
         .then(res => res.json())
         .then(data => {
             if (!data.success) {
-                showError(data.error || 'Processing failed');
+                showError(data.error || 'Sync failed');
+                return;
+            }
+
+            // Show sync stats
+            const stats = data.stats;
+            const parts = [];
+            if (stats.added > 0) parts.push(`${stats.added} new`);
+            if (stats.updated > 0) parts.push(`${stats.updated} updated`);
+            if (stats.removed > 0) parts.push(`${stats.removed} removed`);
+            if (stats.unchanged > 0) parts.push(`${stats.unchanged} unchanged`);
+
+            document.getElementById('progress-details').textContent =
+                `Synced ${stats.total} open issues: ${parts.join(', ')}`;
+
+            // Move to area check step
+            currentStep = 'areas';
+            setTimeout(() => processAreasStep(), 1000);
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showError('Network error during sync. Retrying...');
+            setTimeout(() => processSyncStep(), 5000);
+        });
+    }
+
+    function processAreasStep() {
+        updateStepIndicator('areas');
+        document.getElementById('progress-text').textContent = 'Checking areas...';
+        document.getElementById('progress-percent').textContent = '66%';
+        document.getElementById('progress-bar').style.width = '66%';
+
+        fetch(BASEURL + 'sync/check-areas/' + currentJobId, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showError(data.error || 'Area check failed');
+                return;
+            }
+
+            if (data.needs_area_approval) {
+                // Areas need approval - reload page to show modal
+                document.getElementById('progress-modal').classList.add('hidden');
+                window.location.reload();
+            } else {
+                // Areas exist, move to analysis
+                currentStep = 'analyze';
+                setTimeout(() => processAnalyzeChunk(), 1000);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showError('Network error during area check. Retrying...');
+            setTimeout(() => processAreasStep(), 5000);
+        });
+    }
+
+    function processAnalyzeChunk() {
+        updateStepIndicator('analyze');
+        document.getElementById('progress-text').textContent = 'Analyzing issues...';
+
+        fetch(BASEURL + 'sync/process-analyze/' + currentJobId, {
+            method: 'POST'
+        })
+        .then(res => {
+            // Check if response is JSON before parsing
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return res.text().then(text => {
+                    console.error('Non-JSON response:', text.substring(0, 500));
+                    throw new Error('Server returned HTML instead of JSON. Check server error logs.');
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (!data.success) {
+                showError(data.error || 'Analysis failed');
                 return;
             }
 
             updateProgress(data.processed, data.total, data.percent);
 
             if (data.completed) {
-                completeAnalysis();
+                completeSync();
             } else {
                 // Continue processing next chunk
-                setTimeout(() => processNextChunk(), 1000);
+                setTimeout(() => processAnalyzeChunk(), 1000);
             }
         })
         .catch(err => {
             console.error('Error:', err);
-            showError('Network error. Retrying...');
-            setTimeout(() => processNextChunk(), 5000);
+            showError('Network error during analysis. Retrying...');
+            setTimeout(() => processAnalyzeChunk(), 5000);
         });
     }
 
+    function showResumeModal(jobId, status, processed, total) {
+        currentJobId = jobId;
+
+        // Determine which step to resume from based on status and progress
+        if (status === 'pending' || status === 'syncing') {
+            // Resume from sync step
+            currentStep = 'sync';
+            showProgressModal();
+            processSyncStep();
+        } else if (status === 'processing') {
+            // Resume from analysis step - skip sync and areas
+            currentStep = 'analyze';
+            showProgressModal();
+
+            // Mark sync and areas as complete
+            setStepIcon('sync', 'complete', 'check');
+            setStepLine(1, true);
+            setStepIcon('areas', 'complete', 'check');
+            setStepLine(2, true);
+            setStepIcon('analyze', 'active', 'chart-line');
+
+            // Set progress to where we left off
+            const percent = total > 0 ? Math.round((processed / total) * 100) : 0;
+            const overallPercent = 67 + Math.round(percent * 0.33);
+            document.getElementById('progress-percent').textContent = overallPercent + '%';
+            document.getElementById('progress-bar').style.width = overallPercent + '%';
+            document.getElementById('progress-text').textContent = 'Analyzing issues...';
+            document.getElementById('progress-count').textContent = processed;
+            document.getElementById('progress-total').textContent = total;
+            document.getElementById('progress-details').textContent = `${processed} of ${total} issues analyzed`;
+
+            // Continue processing
+            processAnalyzeChunk();
+        }
+    }
+
     function updateProgress(processed, total, percent) {
-        document.getElementById('progress-count').textContent = processed;
-        document.getElementById('progress-total').textContent = total;
-        document.getElementById('progress-percent').textContent = percent + '%';
-        document.getElementById('progress-bar').style.width = percent + '%';
+        // Map analysis progress from 67% to 100%
+        // 0% analysis = 67% overall, 100% analysis = 100% overall
+        const overallPercent = 67 + Math.round(percent * 0.33);
+
+        const countEl = document.getElementById('progress-count');
+        const totalEl = document.getElementById('progress-total');
+        const percentEl = document.getElementById('progress-percent');
+        const barEl = document.getElementById('progress-bar');
+        const detailsEl = document.getElementById('progress-details');
+
+        if (countEl) countEl.textContent = processed;
+        if (totalEl) totalEl.textContent = total;
+        if (percentEl) percentEl.textContent = overallPercent + '%';
+        if (barEl) barEl.style.width = overallPercent + '%';
+        if (detailsEl) detailsEl.textContent = `${processed} of ${total} issues analyzed`;
     }
 
     function showError(message) {
@@ -1751,8 +1926,15 @@
         errorDiv.classList.remove('hidden');
     }
 
-    function completeAnalysis() {
-        document.getElementById('progress-text').textContent = 'Analysis complete!';
+    function completeSync() {
+        // Complete all steps
+        setStepIcon('sync', 'complete', 'check');
+        setStepLine(1, true);
+        setStepIcon('areas', 'complete', 'check');
+        setStepLine(2, true);
+        setStepIcon('analyze', 'complete', 'check');
+
+        document.getElementById('progress-text').textContent = 'Sync & analysis complete!';
         document.getElementById('progress-percent').textContent = '100%';
         document.getElementById('progress-bar').style.width = '100%';
 

@@ -113,6 +113,17 @@ class Issue {
     }
 
     /**
+     * Delete an issue by ID
+     *
+     * @param int $issueId Issue ID
+     * @return bool Success status
+     */
+    public function delete($issueId) {
+        $sql = "DELETE FROM issues WHERE id = ?";
+        return $this->db->execute($sql, [$issueId]);
+    }
+
+    /**
      * Delete all issues for a repository
      *
      * @param int $repositoryId Repository ID
@@ -162,6 +173,28 @@ class Issue {
             'embedding' => isset($row['embedding']) && $row['embedding'] ? json_decode($row['embedding'], true) : null,
             'analyzed_at' => $row['analyzed_at'] ?? null
         ];
+    }
+
+    /**
+     * Update issue fields
+     *
+     * @param int $issueId Issue ID
+     * @param array $data Fields to update
+     * @return bool Success status
+     */
+    public function update($issueId, $data) {
+        $fields = [];
+        $values = [];
+
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $values[] = $value;
+        }
+
+        $values[] = $issueId;
+
+        $sql = "UPDATE issues SET " . implode(', ', $fields) . " WHERE id = ?";
+        return $this->db->execute($sql, $values);
     }
 
     /**
@@ -218,6 +251,25 @@ class Issue {
      */
     public function findUnanalyzed($repositoryId) {
         $sql = "SELECT * FROM issues WHERE repository_id = ? AND analyzed_at IS NULL ORDER BY created_at DESC";
+        $rows = $this->db->fetchAll($sql, [$repositoryId]);
+
+        if (empty($rows)) {
+            return [];
+        }
+
+        return array_map(function($row) {
+            return $this->rowToArray($row);
+        }, $rows);
+    }
+
+    /**
+     * Find issues that need analysis (new or updated since last analysis)
+     *
+     * @param int $repositoryId Repository ID
+     * @return array Array of issues
+     */
+    public function findNeedingAnalysis($repositoryId) {
+        $sql = "SELECT * FROM issues WHERE repository_id = ? AND (analyzed_at IS NULL OR analyzed_at < updated_at) ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql, [$repositoryId]);
 
         if (empty($rows)) {

@@ -35,7 +35,7 @@ class AnalysisJob {
      */
     public function findActive($repositoryId) {
         $sql = "SELECT * FROM analysis_jobs
-                WHERE repository_id = ? AND status IN ('pending', 'processing')
+                WHERE repository_id = ? AND status IN ('pending', 'processing', 'syncing')
                 ORDER BY created_at DESC LIMIT 1";
 
         $row = $this->db->fetch($sql, [$repositoryId]);
@@ -68,6 +68,28 @@ class AnalysisJob {
                 WHERE id = ?";
 
         return $this->db->execute($sql, [$processedIssues, $currentStep, $jobId]);
+    }
+
+    /**
+     * Update job fields
+     *
+     * @param int $jobId Job ID
+     * @param array $data Fields to update
+     * @return bool Success status
+     */
+    public function update($jobId, $data) {
+        $fields = [];
+        $values = [];
+
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $values[] = $value;
+        }
+
+        $values[] = $jobId;
+
+        $sql = "UPDATE analysis_jobs SET " . implode(', ', $fields) . " WHERE id = ?";
+        return $this->db->execute($sql, $values);
     }
 
     /**
