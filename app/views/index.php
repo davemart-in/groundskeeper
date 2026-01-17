@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 	<link rel="stylesheet" type="text/css" charset="utf-8"  media="screen, projection" href="<?php echo BASEURL; ?>css/groundskeeper-core.css?<?php getVersionNumber(); ?>" />
+	<link rel="stylesheet" type="text/css" charset="utf-8"  media="screen, projection" href="<?php echo BASEURL; ?>css/groundskeeper-dashboard.css?<?php getVersionNumber(); ?>" />
+	<link rel="stylesheet" type="text/css" charset="utf-8"  media="screen, projection" href="<?php echo BASEURL; ?>css/groundskeeper-modals.css?<?php getVersionNumber(); ?>" />
+	<link rel="stylesheet" type="text/css" charset="utf-8"  media="screen, projection" href="<?php echo BASEURL; ?>css/groundskeeper-settings.css?<?php getVersionNumber(); ?>" />
 	<link rel="stylesheet" type="text/css" charset="utf-8"  media="screen, projection" href="<?php echo BASEURL; ?>css/libraries/tailwind.min.css?<?php getVersionNumber(); ?>" />
     <script>
         tailwind.config = {
@@ -375,41 +378,10 @@
                         <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                         <!-- Config Form -->
                         <div class="space-y-8">
-                            <!-- Access Mode Section -->
-                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-                                <h3 class="text-sm font-bold text-slate-900 mb-3">Access Mode</h3>
-                                <p class="text-xs text-slate-500 mb-4">Choose how Groundskeeper connects to GitHub</p>
-
-                                <div class="space-y-4">
-                                    <!-- Read-only Mode -->
-                                    <label class="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-white <?php echo (!isset($glob['user']) || $glob['user']['access_mode'] === 'readonly') ? 'bg-white ring-2 ring-emerald-500' : 'bg-slate-50'; ?>">
-                                        <input type="radio" name="access_mode" value="readonly" class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300" <?php echo (!isset($glob['user']) || $glob['user']['access_mode'] === 'readonly') ? 'checked' : ''; ?> onchange="toggleConnectionSection('readonly')">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="font-medium text-slate-900">Read-only</span>
-                                                <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Recommended</span>
-                                            </div>
-                                            <p class="text-xs text-slate-600">View and analyze issues without GitHub org approval. Uses Personal Access Token or public API (60 requests/hour).</p>
-                                        </div>
-                                    </label>
-
-                                    <!-- Read/Write Mode -->
-                                    <label class="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-white <?php echo (isset($glob['user']) && $glob['user']['access_mode'] === 'readwrite') ? 'bg-white ring-2 ring-emerald-500' : 'bg-slate-50'; ?>">
-                                        <input type="radio" name="access_mode" value="readwrite" class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300" <?php echo (isset($glob['user']) && $glob['user']['access_mode'] === 'readwrite') ? 'checked' : ''; ?> onchange="toggleConnectionSection('readwrite')">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="font-medium text-slate-900">Read/Write</span>
-                                                <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Requires OAuth</span>
-                                            </div>
-                                            <p class="text-xs text-slate-600">Full access to close issues, add labels, and post comments. Requires org admin approval for OAuth app.</p>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Auth Section -->
+                            <!-- GitHub Connection Section -->
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                 <h3 class="text-sm font-bold text-slate-900 mb-2">GitHub Connection</h3>
+                                <p class="text-xs text-slate-500 mb-4">View and analyze issues using your GitHub username and optional Personal Access Token.</p>
 
                                 <?php if (isset($glob['user']) && $glob['user']): ?>
                                     <!-- Connected state -->
@@ -418,26 +390,16 @@
                                             <img src="<?php echo htmlspecialchars($glob['user']['avatar_url']); ?>" alt="Avatar" class="w-10 h-10 rounded-full">
                                         <?php endif; ?>
                                         <div>
-                                            <?php if ($glob['user']['access_mode'] === 'readwrite'): ?>
-                                                <p class="text-sm text-slate-600">Connected via OAuth as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
-                                                <p class="text-xs text-emerald-600 mt-1"><i class="fa-solid fa-check-circle"></i> Full read/write access</p>
-                                            <?php else: ?>
-                                                <p class="text-sm text-slate-600">Connected as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
-                                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-eye"></i> Read-only access</p>
-                                            <?php endif; ?>
+                                            <p class="text-sm text-slate-600">Connected as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
+                                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-eye"></i> Read-only access</p>
                                         </div>
                                     </div>
                                     <div class="flex gap-3">
-                                        <?php if ($glob['user']['access_mode'] === 'readwrite'): ?>
-                                            <a href="<?php echo BASEURL; ?>auth/github" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Re-authenticate</a>
-                                        <?php else: ?>
-                                            <button onclick="document.getElementById('pat-form').classList.toggle('hidden')" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Update Token</button>
-                                        <?php endif; ?>
+                                        <button onclick="document.getElementById('pat-form').classList.toggle('hidden')" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Update Token</button>
                                         <a href="<?php echo BASEURL; ?>settings/disconnect" class="text-sm text-red-600 border border-red-200 bg-white px-3 py-1.5 rounded hover:bg-red-50">Disconnect</a>
                                     </div>
 
                                     <!-- PAT Update Form (hidden by default) -->
-                                    <?php if ($glob['user']['access_mode'] === 'readonly'): ?>
                                     <div id="pat-form" class="hidden mt-4 pt-4 border-t border-slate-200">
                                         <form method="POST" action="<?php echo BASEURL; ?>settings/update-token">
                                             <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token</label>
@@ -446,39 +408,23 @@
                                             <button type="submit" class="mt-3 bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-emerald-700">Update Token</button>
                                         </form>
                                     </div>
-                                    <?php endif; ?>
                                 <?php else: ?>
                                     <!-- Not connected state -->
-                                    <p class="text-sm text-slate-600 mb-4">Connect your GitHub account to start analyzing issues.</p>
-
-                                    <!-- Read-only connection form -->
-                                    <div id="readonly-connection" class="<?php echo (!isset($glob['user']) || (isset($_POST['access_mode']) && $_POST['access_mode'] === 'readwrite')) ? 'hidden' : ''; ?>">
-                                        <form method="POST" action="<?php echo BASEURL; ?>settings/connect-readonly" class="space-y-3">
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-700 mb-2">GitHub Username</label>
-                                                <input type="text" name="github_username" required class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="your-github-username">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token (optional)</label>
-                                                <input type="text" name="personal_access_token" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="ghp_xxxxxxxxxxxx">
-                                                <p class="text-xs text-slate-500 mt-1">Without token: 60 requests/hour. With token: 5000 requests/hour. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Groundskeeper" target="_blank" class="text-emerald-600 hover:underline">Create token</a></p>
-                                            </div>
-                                            <button type="submit" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">
-                                                <i class="fa-solid fa-eye"></i>
-                                                Connect (Read-only)
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    <!-- Read/Write OAuth connection -->
-                                    <div id="readwrite-connection" class="hidden">
-                                        <p class="text-xs text-slate-500 mb-3">Connect with GitHub OAuth for full read/write access:</p>
-                                        <a href="<?php echo BASEURL; ?>auth/github" class="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800">
+                                    <form method="POST" action="<?php echo BASEURL; ?>settings/connect-readonly" class="space-y-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-700 mb-2">GitHub Username</label>
+                                            <input type="text" name="github_username" required class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="your-github-username">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token (optional)</label>
+                                            <input type="text" name="personal_access_token" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="ghp_xxxxxxxxxxxx">
+                                            <p class="text-xs text-slate-500 mt-1">Without token: 60 requests/hour. With token: 5000 requests/hour. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Groundskeeper" target="_blank" class="text-emerald-600 hover:underline">Create token</a></p>
+                                        </div>
+                                        <button type="submit" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">
                                             <i class="fa-brands fa-github"></i>
-                                            Sign in with GitHub OAuth
-                                        </a>
-                                        <p class="text-xs text-slate-500 mt-3"><i class="fa-solid fa-info-circle"></i> Requires org admin approval for OAuth app</p>
-                                    </div>
+                                            Connect GitHub
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                             </div>
 
@@ -644,27 +590,10 @@
                             <span class="text-sm text-slate-500" id="selected-count-duplicates">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Dismiss
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Merge & Close Selected
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <?php else: ?>
-                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Dismiss
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('duplicates')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                                <i class="fa-solid fa-copy mr-1.5"></i>
+                                Copy Issue URLs
                             </button>
-                            <button class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Merge & Close Selected
-                            </button>
-                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -785,27 +714,10 @@
                             <span class="text-sm text-slate-500" id="selected-count-cleanup">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Ignore
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Close Selected
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <?php else: ?>
-                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Ignore
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('cleanup')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                                <i class="fa-solid fa-copy mr-1.5"></i>
+                                Copy Issue URLs
                             </button>
-                            <button class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Close Selected
-                            </button>
-                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -863,18 +775,10 @@
                             <span class="text-sm text-slate-500" id="selected-count-missing-info">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Request Info (AI Draft)
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <?php else: ?>
-                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Request Info (AI Draft)
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('missing-info')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                                <i class="fa-solid fa-copy mr-1.5"></i>
+                                Copy Issue URLs
                             </button>
-                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -932,27 +836,10 @@
                             <span class="text-sm text-slate-500" id="selected-count-suggestions">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                            <?php if (!isset($glob['user']) || $glob['user']['access_mode'] !== 'readwrite'): ?>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Dismiss
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <div class="tooltip-wrapper">
-                                <button disabled class="bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium shadow-sm opacity-50 cursor-not-allowed">
-                                    Apply Selected
-                                </button>
-                                <span class="tooltip-text">Disabled in read-only mode</span>
-                            </div>
-                            <?php else: ?>
-                            <button class="bg-white border border-slate-300 text-slate-600 hover:text-red-600 hover:border-red-300 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Dismiss
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('suggestions')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
+                                <i class="fa-solid fa-copy mr-1.5"></i>
+                                Copy Issue URLs
                             </button>
-                            <button class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                Apply Selected
-                            </button>
-                            <?php endif; ?>
                         </div>
                     </div>
 

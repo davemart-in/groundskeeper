@@ -495,22 +495,6 @@ window.GRNDSKPR.Dashboard = (function() {
     }
 
     /**
-     * Toggle connection section based on access mode
-     */
-    function toggleConnectionSection(mode) {
-        const readonlySection = document.getElementById('readonly-connection');
-        const readwriteSection = document.getElementById('readwrite-connection');
-
-        if (mode === 'readonly') {
-            if (readonlySection) readonlySection.classList.remove('hidden');
-            if (readwriteSection) readwriteSection.classList.add('hidden');
-        } else if (mode === 'readwrite') {
-            if (readonlySection) readonlySection.classList.add('hidden');
-            if (readwriteSection) readwriteSection.classList.remove('hidden');
-        }
-    }
-
-    /**
      * Show toast notification
      */
     function showToast(message, isError = false) {
@@ -552,11 +536,7 @@ window.GRNDSKPR.Dashboard = (function() {
      * Initialize dashboard functionality
      */
     function init() {
-        // Set initial connection section state
-        const selectedMode = document.querySelector('input[name="access_mode"]:checked');
-        if (selectedMode) {
-            toggleConnectionSection(selectedMode.value);
-        }
+        // Initialization complete
     }
 
     // Public API
@@ -570,7 +550,6 @@ window.GRNDSKPR.Dashboard = (function() {
         toggleAreas: toggleAreas,
         filterDashboard: filterDashboard,
         resetDashboard: resetDashboard,
-        toggleConnectionSection: toggleConnectionSection,
         showToast: showToast,
         showAuditLoading: showAuditLoading,
         showAnalyzeLoading: showAnalyzeLoading

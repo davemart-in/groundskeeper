@@ -6,6 +6,9 @@ $glob = array();
 /* LOCAL FILE MANIPULATION ------------------------------------------- */
 require_once(COREPATH.'libraries/File.php');
 
+/* DATABASE ------------------------------------------- */
+require_once(COREPATH.'libraries/Database.php');
+
 /* ENCRYPTION ------------------------------------------- */
 require_once(COREPATH.'libraries/Encryption.php');
 

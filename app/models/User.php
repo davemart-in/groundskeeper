@@ -12,7 +12,6 @@ class User {
     public $github_id;
     public $github_username;
     public $avatar_url;
-    public $access_mode; // 'readonly' or 'readwrite'
     public $created_at;
     public $updated_at;
     private $github_access_token; // Encrypted in database
@@ -62,7 +61,7 @@ class User {
     /**
      * Create a new user
      *
-     * @param array $data User data (github_username, github_access_token, access_mode, github_id, avatar_url)
+     * @param array $data User data (github_username, github_access_token, github_id, avatar_url)
      * @return User Created user object
      */
     public function create($data) {
@@ -74,15 +73,14 @@ class User {
             $encryptedToken = $this->encryption->encrypt($data['github_access_token']);
         }
 
-        $sql = "INSERT INTO users (github_id, github_username, github_access_token, avatar_url, access_mode, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO users (github_id, github_username, github_access_token, avatar_url, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)";
 
         $this->db->execute($sql, [
             $data['github_id'] ?? null,
             $data['github_username'],
             $encryptedToken,
             $data['avatar_url'] ?? null,
-            $data['access_mode'] ?? 'readonly',
             $now,
             $now
         ]);
@@ -197,7 +195,6 @@ class User {
         $this->github_username = $row['github_username'];
         $this->github_access_token = $row['github_access_token']; // Keep encrypted
         $this->avatar_url = $row['avatar_url'];
-        $this->access_mode = $row['access_mode'] ?? 'readonly';
         $this->created_at = $row['created_at'];
         $this->updated_at = $row['updated_at'];
 
@@ -215,19 +212,9 @@ class User {
             'github_id' => $this->github_id,
             'github_username' => $this->github_username,
             'avatar_url' => $this->avatar_url,
-            'access_mode' => $this->access_mode,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];
-    }
-
-    /**
-     * Check if user is in read-only mode
-     *
-     * @return bool
-     */
-    public function isReadOnly() {
-        return $this->access_mode === 'readonly';
     }
 
     /**

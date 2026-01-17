@@ -49,14 +49,13 @@ if ($segment1 === 'connect-readonly' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $newUser = $userModel->create([
             'github_username' => $username,
-            'github_access_token' => $token ?: null,
-            'access_mode' => 'readonly'
+            'github_access_token' => $token ?: null
         ]);
 
         $_SESSION['user_id'] = $newUser->id;
-        $_SESSION['success'] = 'Successfully connected in read-only mode!';
+        $_SESSION['success'] = 'Successfully connected to GitHub!';
     } catch (Exception $e) {
-        error_log('Connect readonly error: ' . $e->getMessage());
+        error_log('Connect error: ' . $e->getMessage());
         $_SESSION['error'] = 'Failed to connect. Please try again.';
     }
 
