@@ -238,3 +238,117 @@ body.font-size-large #terminal-text {
 		padding: 0 2rem;
 	}
 }
+
+/* ---- */
+/* DASHBOARD CONTROLS BAR */
+/* ---- */
+.dashboard-controls {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 1rem;
+	background: #fff;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	border: 1px solid #e2e8f0;
+}
+
+.dashboard-controls__repo-section {
+	position: relative;
+	width: 100%;
+}
+
+.dashboard-controls__label {
+	display: block;
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: #94a3b8;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 0.25rem;
+}
+
+.dashboard-controls__select {
+	display: block;
+	width: 100%;
+	padding-left: 0.75rem;
+	padding-right: 2.5rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	font-size: 1rem;
+	border: 1px solid #cbd5e1;
+	border-radius: 0.375rem;
+	background: #f8fafc;
+}
+
+.dashboard-controls__select:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+	border-color: #059669;
+}
+
+.dashboard-controls__status-section {
+	text-align: left;
+}
+
+.dashboard-controls__status-info {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+	color: #334155;
+}
+
+.dashboard-controls__status-indicator {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 9999px;
+	background: #10b981;
+}
+
+.dashboard-controls__sync-form {
+	display: inline;
+}
+
+.dashboard-controls__sync-btn {
+	margin-left: 0.5rem;
+	color: #2563eb;
+	font-size: 0.75rem;
+	font-weight: 500;
+	border: 1px solid #bfdbfe;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	padding-left: 0.75rem;
+	padding-right: 0.75rem;
+	border-radius: 0.25rem;
+	background: #eff6ff;
+	cursor: pointer;
+	transition: color 0.15s, background 0.15s;
+}
+
+.dashboard-controls__sync-btn:hover {
+	color: #1e40af;
+	background: #dbeafe;
+}
+
+/* Responsive - sm breakpoint and up */
+@media (min-width: 640px) {
+	.dashboard-controls {
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.dashboard-controls__repo-section {
+		width: 20rem;
+	}
+
+	.dashboard-controls__select {
+		font-size: 0.875rem;
+	}
+
+	.dashboard-controls__status-section {
+		text-align: right;
+	}
+}

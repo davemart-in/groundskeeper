@@ -59,11 +59,11 @@
         <div id="view-dashboard" class="space-y-6 animate-fade-in <?php echo (isset($glob['active_tab']) && $glob['active_tab'] === 'settings') ? 'hidden' : ''; ?>">
             
             <!-- Dashboard Controls -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                <div class="relative w-full sm:w-80">
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Repository</label>
+            <div class="dashboard-controls">
+                <div class="dashboard-controls__repo-section">
+                    <label class="dashboard-controls__label">Repository</label>
                     <?php if (!empty($glob['repositories'])): ?>
-                        <select class="block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-slate-50 border">
+                        <select class="dashboard-controls__select">
                             <?php foreach ($glob['repositories'] as $repo): ?>
                                 <option value="<?php echo $repo['id']; ?>"><?php echo htmlspecialchars($repo['full_name']); ?></option>
                             <?php endforeach; ?>
@@ -75,22 +75,22 @@
                     <?php endif; ?>
                 </div>
                 <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
-                <div class="text-right">
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Analysis Status</span>
+                <div class="dashboard-controls__status-section">
+                    <span class="dashboard-controls__label">Analysis Status</span>
                     <?php if (!$glob['selected_repo']['last_audited_at']): ?>
-                        <div class="flex items-center gap-2 text-sm text-slate-700">
-                            <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                        <div class="dashboard-controls__status-info">
+                            <span class="dashboard-controls__status-indicator" style="background: #cbd5e1;"></span>
                             Not yet audited
-                            <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline" onsubmit="showAuditLoading()">
-                                <button type="submit" class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs font-medium border border-emerald-200 px-2 py-0.5 rounded bg-emerald-50"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
+                            <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form" onsubmit="showAuditLoading()">
+                                <button type="submit" class="dashboard-controls__sync-btn" style="color: #059669; border-color: #a7f3d0; background: #d1fae5;"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
                             </form>
                         </div>
                     <?php else: ?>
-                        <div class="flex items-center gap-2 text-sm text-slate-700">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <div class="dashboard-controls__status-info">
+                            <span class="dashboard-controls__status-indicator"></span>
                             Last audited <?php echo date('M j, Y', $glob['selected_repo']['last_audited_at']); ?>
-                            <form id="sync-form" method="POST" action="<?php echo BASEURL; ?>sync/run/<?php echo $glob['selected_repo']['id']; ?>" class="inline">
-                                <button type="submit" class="ml-2 text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-200 px-2 py-0.5 rounded bg-blue-50"><i class="fa-solid fa-arrows-rotate mr-1"></i> Update issues and re-analyze</button>
+                            <form id="sync-form" method="POST" action="<?php echo BASEURL; ?>sync/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form">
+                                <button type="submit" class="dashboard-controls__sync-btn"><i class="fa-solid fa-arrows-rotate mr-1"></i> Update issues and re-analyze</button>
                             </form>
                         </div>
                     <?php endif; ?>
