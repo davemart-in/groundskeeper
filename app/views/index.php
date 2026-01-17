@@ -506,7 +506,7 @@
     <!-- MODAL: Add Repo -->
     <div id="modal-add-repo" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+        <div class="modal__backdrop"></div>
 
         <!-- Fixed wrapper for centering -->
         <div class="fixed inset-0 z-10 overflow-y-auto" onclick="GRNDSKPR.Dashboard.closeModal('add-repo')">
@@ -559,7 +559,7 @@
     <!-- MODAL: Bulk Action View -->
     <div id="modal-duplicates" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+        <div class="modal__backdrop"></div>
 
         <!-- Fixed wrapper for centering -->
         <div class="fixed inset-0 z-10 overflow-y-auto" onclick="GRNDSKPR.Dashboard.closeModal('duplicates')">
@@ -590,8 +590,8 @@
                             <span class="text-sm text-slate-500" id="selected-count-duplicates">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('duplicates')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                <i class="fa-solid fa-copy mr-1.5"></i>
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('duplicates')" class="modal__action-btn">
+                                <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
                         </div>
@@ -622,7 +622,7 @@
     <!-- MODAL: High Signal Issues -->
     <div id="modal-high-signal" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+        <div class="modal__backdrop"></div>
 
         <!-- Fixed wrapper for centering -->
         <div class="fixed inset-0 z-10 overflow-y-auto" onclick="GRNDSKPR.Dashboard.closeModal('high-signal')">
@@ -653,8 +653,8 @@
                             <span class="text-sm text-slate-500" id="selected-count-high-signal">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('high-signal')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                <i class="fa-solid fa-copy mr-1.5"></i>
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('high-signal')" class="modal__action-btn">
+                                <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
                         </div>
@@ -683,7 +683,7 @@
     <!-- MODAL: Cleanup Candidates -->
     <div id="modal-cleanup" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+        <div class="modal__backdrop"></div>
 
         <!-- Fixed wrapper for centering -->
         <div class="fixed inset-0 z-10 overflow-y-auto" onclick="GRNDSKPR.Dashboard.closeModal('cleanup')">
@@ -714,8 +714,8 @@
                             <span class="text-sm text-slate-500" id="selected-count-cleanup">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('cleanup')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                <i class="fa-solid fa-copy mr-1.5"></i>
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('cleanup')" class="modal__action-btn">
+                                <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
                         </div>
@@ -744,7 +744,7 @@
     <!-- MODAL: Missing Info -->
     <div id="modal-missing-info" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+        <div class="modal__backdrop"></div>
 
         <!-- Fixed wrapper for centering -->
         <div class="fixed inset-0 z-10 overflow-y-auto" onclick="GRNDSKPR.Dashboard.closeModal('missing-info')">
@@ -775,8 +775,8 @@
                             <span class="text-sm text-slate-500" id="selected-count-missing-info">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('missing-info')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                <i class="fa-solid fa-copy mr-1.5"></i>
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('missing-info')" class="modal__action-btn">
+                                <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
                         </div>
@@ -805,7 +805,7 @@
     <!-- MODAL: Suggestions -->
     <div id="modal-suggestions" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+        <div class="modal__backdrop"></div>
 
         <!-- Fixed wrapper for centering -->
         <div class="fixed inset-0 z-10 overflow-y-auto" onclick="GRNDSKPR.Dashboard.closeModal('suggestions')">
@@ -836,8 +836,8 @@
                             <span class="text-sm text-slate-500" id="selected-count-suggestions">0 selected</span>
                         </div>
                         <div class="flex gap-2">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('suggestions')" class="bg-emerald-600 border border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 px-3 py-1.5 rounded text-sm font-medium shadow-sm transition">
-                                <i class="fa-solid fa-copy mr-1.5"></i>
+                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('suggestions')" class="modal__action-btn">
+                                <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
                         </div>
