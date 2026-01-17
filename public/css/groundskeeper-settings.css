@@ -356,10 +356,6 @@
 	border-radius: 9999px;
 }
 
-.github-connection-section__user-info {
-	/* Empty - just a container */
-}
-
 .github-connection-section__user-name {
 	font-size: 0.875rem;
 	color: #475569;
@@ -448,10 +444,6 @@
 /* ---- */
 /* FORM FIELDS */
 /* ---- */
-.settings-form-field {
-	/* Empty - just a container */
-}
-
 .settings-form-field__label {
 	display: block;
 	font-size: 0.75rem;
@@ -527,10 +519,6 @@
 /* ---- */
 /* LABEL MAPPING SECTION */
 /* ---- */
-.label-mapping-section {
-	/* Empty - just a container */
-}
-
 .label-mapping-section__title {
 	font-size: 1.125rem;
 	font-weight: 700;

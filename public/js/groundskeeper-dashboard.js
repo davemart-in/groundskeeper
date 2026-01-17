@@ -519,8 +519,7 @@ window.GRNDSKPR.Dashboard = (function() {
      */
     function showAuditLoading() {
         const overlay = document.getElementById('audit-loading');
-        overlay.classList.remove('hidden');
-        overlay.classList.add('flex');
+        overlay.classList.remove('loading-overlay--hidden');
     }
 
     /**
@@ -528,8 +527,7 @@ window.GRNDSKPR.Dashboard = (function() {
      */
     function showAnalyzeLoading() {
         const overlay = document.getElementById('analyze-loading');
-        overlay.classList.remove('hidden');
-        overlay.classList.add('flex');
+        overlay.classList.remove('loading-overlay--hidden');
     }
 
     /**
