@@ -103,6 +103,11 @@ if ($glob['selected_repo']) {
 	}
 	unset($issue);
 
+	// Filter to only show issues with score of 50 or more
+	$highSignalIssues = array_filter($highSignalIssues, function($issue) {
+		return $issue['priority_score'] >= 50;
+	});
+
 	// Sort by priority score (highest first)
 	usort($highSignalIssues, function($a, $b) {
 		return $b['priority_score'] - $a['priority_score'];
