@@ -362,13 +362,13 @@ window.GRNDSKPR.Dashboard = (function() {
     function toggleAreas() {
         const hiddenRows = document.querySelectorAll('.area-hidden');
         const btn = document.getElementById('btn-show-areas');
-        const isHidden = hiddenRows[0].classList.contains('hidden');
+        const isHidden = hiddenRows[0].classList.contains('area-table__row--hidden');
 
         hiddenRows.forEach(row => {
             if(isHidden) {
-                row.classList.remove('hidden');
+                row.classList.remove('area-table__row--hidden');
             } else {
-                row.classList.add('hidden');
+                row.classList.add('area-table__row--hidden');
             }
         });
 
@@ -395,13 +395,13 @@ window.GRNDSKPR.Dashboard = (function() {
 
         // Remove selected state from all area rows
         document.querySelectorAll('.area-row').forEach(row => {
-            row.classList.remove('bg-emerald-50', 'border-l-4', 'border-l-emerald-500');
+            row.classList.remove('area-table__row--selected');
         });
 
         // Add selected state to clicked row
         const selectedRow = document.querySelector(`.area-row[data-area-id="${areaId}"]`);
         if (selectedRow) {
-            selectedRow.classList.add('bg-emerald-50', 'border-l-4', 'border-l-emerald-500');
+            selectedRow.classList.add('area-table__row--selected');
         }
 
         // Update Stats with pre-calculated counts for this area
@@ -429,7 +429,7 @@ window.GRNDSKPR.Dashboard = (function() {
 
         // Remove selected state from all area rows
         document.querySelectorAll('.area-row').forEach(row => {
-            row.classList.remove('bg-emerald-50', 'border-l-4', 'border-l-emerald-500');
+            row.classList.remove('area-table__row--selected');
         });
 
         // Restore Stats

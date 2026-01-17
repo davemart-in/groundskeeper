@@ -228,48 +228,48 @@
                 </div>
 
                 <!-- Right Column: Breakdowns -->
-                <div class="space-y-8">
+                <div class="breakdowns-column">
 
                     <?php if ($hasPriorityLabels): ?>
                     <!-- By Priority -->
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-4">Issues by Priority</h3>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                            <div class="space-y-4">
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="font-medium text-red-700">Critical / High</span>
-                                        <span class="text-slate-500">12%</span>
+                    <div class="breakdown-section">
+                        <h3 class="breakdown-section__title">Issues by Priority</h3>
+                        <div class="breakdown-section__card">
+                            <div class="priority-list">
+                                <div class="priority-item">
+                                    <div class="priority-item__header">
+                                        <span class="priority-item__label priority-item__label--critical">Critical / High</span>
+                                        <span class="priority-item__percentage">12%</span>
                                     </div>
-                                    <div class="w-full bg-slate-100 rounded-full h-2">
-                                        <div class="bg-red-500 h-2 rounded-full" style="width: 12%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="font-medium text-amber-700">Medium</span>
-                                        <span class="text-slate-500">34%</span>
-                                    </div>
-                                    <div class="w-full bg-slate-100 rounded-full h-2">
-                                        <div class="bg-amber-400 h-2 rounded-full" style="width: 34%"></div>
+                                    <div class="priority-item__bar-bg">
+                                        <div class="priority-item__bar-fill priority-item__bar-fill--critical" style="width: 12%"></div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="font-medium text-blue-700">Low / Enhancement</span>
-                                        <span class="text-slate-500">41%</span>
+                                <div class="priority-item">
+                                    <div class="priority-item__header">
+                                        <span class="priority-item__label priority-item__label--medium">Medium</span>
+                                        <span class="priority-item__percentage">34%</span>
                                     </div>
-                                    <div class="w-full bg-slate-100 rounded-full h-2">
-                                        <div class="bg-blue-400 h-2 rounded-full" style="width: 41%"></div>
+                                    <div class="priority-item__bar-bg">
+                                        <div class="priority-item__bar-fill priority-item__bar-fill--medium" style="width: 34%"></div>
                                     </div>
                                 </div>
-                                <div>
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="font-medium text-slate-500">Un-prioritized</span>
-                                        <span class="text-slate-500">13%</span>
+                                <div class="priority-item">
+                                    <div class="priority-item__header">
+                                        <span class="priority-item__label priority-item__label--low">Low / Enhancement</span>
+                                        <span class="priority-item__percentage">41%</span>
                                     </div>
-                                    <div class="w-full bg-slate-100 rounded-full h-2">
-                                        <div class="bg-slate-300 h-2 rounded-full" style="width: 13%"></div>
+                                    <div class="priority-item__bar-bg">
+                                        <div class="priority-item__bar-fill priority-item__bar-fill--low" style="width: 41%"></div>
+                                    </div>
+                                </div>
+                                <div class="priority-item">
+                                    <div class="priority-item__header">
+                                        <span class="priority-item__label priority-item__label--unprioritized">Un-prioritized</span>
+                                        <span class="priority-item__percentage">13%</span>
+                                    </div>
+                                    <div class="priority-item__bar-bg">
+                                        <div class="priority-item__bar-fill priority-item__bar-fill--unprioritized" style="width: 13%"></div>
                                     </div>
                                 </div>
                             </div>
@@ -278,33 +278,33 @@
                     <?php endif; ?>
 
                      <!-- By Functionality -->
-                     <div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-4">Issues by Area</h3>
+                     <div class="breakdown-section">
+                        <h3 class="breakdown-section__title">Issues by Area</h3>
                         <?php if (!empty($glob['area_stats'])): ?>
-                        <div class="bg-white p-2 rounded-lg shadow-sm border border-slate-200">
-                           <table class="min-w-full text-sm">
-                               <tbody class="divide-y divide-slate-100">
+                        <div class="area-table-container">
+                           <table class="area-table">
+                               <tbody class="area-table__body">
                                    <?php
                                    $topCount = 10;
                                    foreach ($glob['area_stats'] as $index => $area):
                                        $isHidden = $index >= $topCount;
-                                       $rowClass = $isHidden ? 'hidden area-hidden bg-slate-50/50 hover:bg-slate-100' : 'hover:bg-slate-50';
+                                       $hiddenClass = $isHidden ? 'area-table__row--hidden area-hidden' : '';
                                    ?>
-                                   <tr class="area-row <?php echo $rowClass; ?> cursor-pointer group transition-all" data-area-id="<?php echo $area['id']; ?>" onclick="GRNDSKPR.Dashboard.filterDashboard('<?php echo htmlspecialchars(addslashes($area['name'])); ?>', <?php echo $area['count']; ?>, <?php echo $area['id']; ?>)">
-                                       <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700"><?php echo htmlspecialchars($area['name']); ?></td>
-                                       <td class="p-3 text-right text-slate-500 whitespace-nowrap"><?php echo $area['count']; ?> <span class="text-xs text-slate-400 ml-1">(<?php echo $area['percentage']; ?>%)</span></td>
+                                   <tr class="area-row area-table__row <?php echo $hiddenClass; ?>" data-area-id="<?php echo $area['id']; ?>" onclick="GRNDSKPR.Dashboard.filterDashboard('<?php echo htmlspecialchars(addslashes($area['name'])); ?>', <?php echo $area['count']; ?>, <?php echo $area['id']; ?>)">
+                                       <td class="area-table__cell area-table__cell--name"><?php echo htmlspecialchars($area['name']); ?></td>
+                                       <td class="area-table__cell area-table__cell--count"><?php echo $area['count']; ?> <span class="area-table__percentage">(<?php echo $area['percentage']; ?>%)</span></td>
                                    </tr>
                                    <?php endforeach; ?>
                                </tbody>
                            </table>
                            <?php if (count($glob['area_stats']) > $topCount): ?>
-                           <div class="p-2 border-t border-slate-50 text-center">
-                                <button onclick="GRNDSKPR.Dashboard.toggleAreas()" id="btn-show-areas" class="text-xs font-medium text-emerald-600 hover:text-emerald-700">Show all</button>
+                           <div class="area-table__toggle">
+                                <button onclick="GRNDSKPR.Dashboard.toggleAreas()" id="btn-show-areas" class="area-table__toggle-btn">Show all</button>
                            </div>
                            <?php endif; ?>
                         </div>
                         <?php else: ?>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center text-slate-500 text-sm">
+                        <div class="area-empty-state">
                             No areas defined yet. Run analysis to categorize issues.
                         </div>
                         <?php endif; ?>
