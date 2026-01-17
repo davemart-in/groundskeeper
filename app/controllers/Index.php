@@ -30,6 +30,7 @@ if ($glob['selected_repo']) {
 		}
 		if ($count > 0) {
 			$areaStats[] = [
+				'id' => $area['id'],
 				'name' => $area['name'],
 				'count' => $count,
 				'percentage' => $totalIssues > 0 ? round(($count / $totalIssues) * 100) : 0

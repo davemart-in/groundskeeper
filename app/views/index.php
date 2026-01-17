@@ -290,7 +290,7 @@
                                        $isHidden = $index >= $topCount;
                                        $rowClass = $isHidden ? 'hidden area-hidden bg-slate-50/50 hover:bg-slate-100' : 'hover:bg-slate-50';
                                    ?>
-                                   <tr class="<?php echo $rowClass; ?> cursor-pointer group" onclick="filterDashboard('<?php echo htmlspecialchars(addslashes($area['name'])); ?>', <?php echo $area['count']; ?>)">
+                                   <tr class="area-row <?php echo $rowClass; ?> cursor-pointer group transition-all" data-area-id="<?php echo $area['id']; ?>" onclick="filterDashboard('<?php echo htmlspecialchars(addslashes($area['name'])); ?>', <?php echo $area['count']; ?>, <?php echo $area['id']; ?>)">
                                        <td class="p-3 font-medium text-slate-700 group-hover:text-emerald-700"><?php echo htmlspecialchars($area['name']); ?></td>
                                        <td class="p-3 text-right text-slate-500 whitespace-nowrap"><?php echo $area['count']; ?> <span class="text-xs text-slate-400 ml-1">(<?php echo $area['percentage']; ?>%)</span></td>
                                    </tr>
@@ -1416,14 +1416,52 @@
         // Store original stats from actual data
         const originalStats = {
             total: <?php echo count($glob['issues']); ?>,
-            highSignal: 31,
-            duplicates: 47,
-            cleanup: 83,
-            missing: 656,
-            suggestions: 544
+            highSignal: <?php echo count($glob['high_signal_issues']); ?>,
+            duplicates: <?php echo count($glob['duplicates']); ?>,
+            cleanup: <?php echo count($glob['cleanup_candidates']); ?>,
+            missing: <?php echo count($glob['missing_info_issues']); ?>,
+            suggestions: <?php echo count($glob['label_suggestions']); ?>
         };
 
-        function filterDashboard(areaName, count) {
+        // Store area_id mapping for each category (lightweight approach)
+        const highSignalByArea = {};
+        const duplicatesByArea = {};
+        const cleanupByArea = {};
+        const missingByArea = {};
+        const suggestionsByArea = {};
+
+        <?php
+        // Build area counts for each category
+        foreach ($glob['high_signal_issues'] as $issue) {
+            $areaId = $issue['area_id'] ?? 0;
+            echo "highSignalByArea[$areaId] = (highSignalByArea[$areaId] || 0) + 1;\n        ";
+        }
+        foreach ($glob['cleanup_candidates'] as $issue) {
+            $areaId = $issue['area_id'] ?? 0;
+            echo "cleanupByArea[$areaId] = (cleanupByArea[$areaId] || 0) + 1;\n        ";
+        }
+        foreach ($glob['missing_info_issues'] as $issue) {
+            $areaId = $issue['area_id'] ?? 0;
+            echo "missingByArea[$areaId] = (missingByArea[$areaId] || 0) + 1;\n        ";
+        }
+        foreach ($glob['label_suggestions'] as $issue) {
+            $areaId = $issue['area_id'] ?? 0;
+            echo "suggestionsByArea[$areaId] = (suggestionsByArea[$areaId] || 0) + 1;\n        ";
+        }
+        // Duplicates are special - they have an array of issues
+        foreach ($glob['duplicates'] as $duplicate) {
+            if (!empty($duplicate['issues'])) {
+                foreach ($duplicate['issues'] as $issue) {
+                    $areaId = $issue['area_id'] ?? 0;
+                    echo "duplicatesByArea[$areaId] = (duplicatesByArea[$areaId] || 0) + 1;\n        ";
+                    break; // Only count the duplicate group once per area
+                }
+            }
+        }
+        ?>
+
+
+        function filterDashboard(areaName, count, areaId) {
             // Update Header
             const header = document.getElementById('analysis-header');
             header.innerHTML = `
@@ -1435,19 +1473,35 @@
                 <h3 class="text-lg font-bold text-emerald-700">${areaName}</h3>
             `;
 
-            // Update Stats (Mock Logic: simple proportions for the demo)
+            // Remove selected state from all area rows
+            document.querySelectorAll('.area-row').forEach(row => {
+                row.classList.remove('bg-emerald-50', 'border-t-emerald-500', 'border-b-emerald-500');
+            });
+
+            // Add selected state to clicked row
+            const selectedRow = document.querySelector(`.area-row[data-area-id="${areaId}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('bg-emerald-50', 'border-t-emerald-500', 'border-b-emerald-500');
+            }
+
+            // Update Stats with pre-calculated counts for this area
             document.getElementById('stat-total').innerText = count;
-            document.getElementById('stat-high-signal').innerText = Math.ceil(count * 0.05);
-            document.getElementById('stat-duplicates').innerText = Math.ceil(count * 0.08);
-            document.getElementById('stat-cleanup').innerText = Math.ceil(count * 0.12);
-            document.getElementById('stat-missing-info').innerText = Math.ceil(count * 0.65);
-            document.getElementById('stat-suggestions').innerText = Math.ceil(count * 0.55);
+            document.getElementById('stat-high-signal').innerText = highSignalByArea[areaId] || 0;
+            document.getElementById('stat-duplicates').innerText = duplicatesByArea[areaId] || 0;
+            document.getElementById('stat-cleanup').innerText = cleanupByArea[areaId] || 0;
+            document.getElementById('stat-missing-info').innerText = missingByArea[areaId] || 0;
+            document.getElementById('stat-suggestions').innerText = suggestionsByArea[areaId] || 0;
         }
 
         function resetDashboard() {
             // Restore Header
             const header = document.getElementById('analysis-header');
             header.innerHTML = `<h3 class="text-lg font-bold text-slate-900">Analysis Findings</h3>`;
+
+            // Remove selected state from all area rows
+            document.querySelectorAll('.area-row').forEach(row => {
+                row.classList.remove('bg-emerald-50', 'border-t-emerald-500', 'border-b-emerald-500');
+            });
 
             // Restore Stats
             document.getElementById('stat-total').innerText = originalStats.total;
