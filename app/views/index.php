@@ -29,21 +29,21 @@
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
     <!-- Top Navigation Bar -->
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center gap-2 mr-8">
-                        <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold">
+    <nav class="top-nav">
+        <div class="top-nav__container">
+            <div class="top-nav__inner">
+                <div class="top-nav__left">
+                    <div class="top-nav__logo">
+                        <div class="top-nav__logo-icon">
                             <i class="fa-solid fa-leaf"></i>
                         </div>
-                        <span class="font-bold text-slate-900 text-lg tracking-tight">Groundskeeper <span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full ml-1 border border-slate-200">v0.1</span></span>
+                        <span class="top-nav__logo-text">Groundskeeper <span class="top-nav__logo-badge">v0.1</span></span>
                     </div>
-                    <div class="hidden sm:-my-px sm:flex sm:space-x-8">
-                        <a href="<?php echo BASEURL; ?>" id="tab-dashboard" class="<?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'border-emerald-500 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'; ?> inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    <div class="top-nav__tabs">
+                        <a href="<?php echo BASEURL; ?>" id="tab-dashboard" class="top-nav__tab <?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'top-nav__tab--active' : ''; ?>">
                             Dashboard
                         </a>
-                        <a href="<?php echo BASEURL; ?>settings" id="tab-settings" class="<?php echo (isset($glob['active_tab']) && $glob['active_tab'] === 'settings') ? 'border-emerald-500 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'; ?> inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="<?php echo BASEURL; ?>settings" id="tab-settings" class="top-nav__tab <?php echo (isset($glob['active_tab']) && $glob['active_tab'] === 'settings') ? 'top-nav__tab--active' : ''; ?>">
                             Settings
                         </a>
                     </div>
