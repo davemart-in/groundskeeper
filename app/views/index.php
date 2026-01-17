@@ -670,7 +670,6 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
-                        <?php if (!empty($glob['duplicates'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
@@ -683,12 +682,6 @@
                             </thead>
                             <tbody id="tbody-duplicates" class="bg-white divide-y divide-slate-200"></tbody>
                         </table>
-                        <?php else: ?>
-                        <div class="p-12 text-center text-slate-500">
-                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
-                            <p class="text-sm">No duplicate issues found. Run analysis to detect similar issues.</p>
-                        </div>
-                        <?php endif; ?>
                     </div>
                     
                     <!-- Footer Removed -->
@@ -740,7 +733,6 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
-                        <?php if (!empty($glob['high_signal_issues'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
@@ -753,12 +745,6 @@
                             </thead>
                             <tbody id="tbody-high-signal" class="bg-white divide-y divide-slate-200"></tbody>
                         </table>
-                        <?php else: ?>
-                        <div class="p-12 text-center text-slate-500">
-                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
-                            <p class="text-sm">No high signal issues found. Run analysis to identify valuable issues.</p>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -825,7 +811,6 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
-                        <?php if (!empty($glob['cleanup_candidates'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
@@ -838,12 +823,6 @@
                             </thead>
                             <tbody id="tbody-cleanup" class="bg-white divide-y divide-slate-200"></tbody>
                         </table>
-                        <?php else: ?>
-                        <div class="p-12 text-center text-slate-500">
-                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
-                            <p class="text-sm">No cleanup candidates found. Run analysis to identify issues for closure.</p>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -901,7 +880,6 @@
 
                     <!-- List Content -->
                     <div class="max-h-[60vh] overflow-y-auto">
-                        <?php if (!empty($glob['missing_info_issues'])): ?>
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50 sticky top-0">
                                 <tr>
@@ -914,12 +892,6 @@
                             </thead>
                             <tbody id="tbody-missing-info" class="bg-white divide-y divide-slate-200"></tbody>
                         </table>
-                        <?php else: ?>
-                        <div class="p-12 text-center text-slate-500">
-                            <i class="fa-solid fa-inbox text-4xl mb-4 text-slate-300"></i>
-                            <p class="text-sm">No issues missing critical information. Run analysis to identify incomplete issues.</p>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
