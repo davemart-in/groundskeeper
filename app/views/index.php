@@ -26,7 +26,7 @@
         }
     </script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body>
 
     <!-- Top Navigation Bar -->
     <nav class="top-nav">
