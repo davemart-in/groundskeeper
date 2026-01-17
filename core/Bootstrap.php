@@ -1,10 +1,5 @@
 <?php if (!defined('COREPATH')) exit('No direct script access allowed');
 
-/* MAINTENANCE MODE ------------------------------------------- */
-if (MAINTENANCE_MODE) {
-	return require_once(APPPATH.'views/maintenance.php');
-}
-
 /* GLOBALS ------------------------------------------- */
 $glob = array();
 
