@@ -46,56 +46,79 @@ window.GRNDSKPR.Dashboard = (function() {
     }
 
     /**
-     * Render modal table with data
+     * Fetch modal data via AJAX
      */
-    function renderModalTable(modalId, areaId = null) {
-        if (!window.GRNDSKPR_DATA || !window.GRNDSKPR_DATA.issues) {
-            console.error('GRNDSKPR_DATA not available');
-            return;
+    async function fetchModalData(modalId, areaId = null) {
+        const config = window.GRNDSKPR_CONFIG;
+
+        if (!config || !config.repositoryId) {
+            console.error('Repository ID not available');
+            return null;
         }
 
-        let data, templateId, tbodyId;
+        // Build cache key
+        const cacheKey = `${modalId}-${areaId || 'all'}`;
 
-        // Determine which data and template to use
+        // Check cache first
+        if (window.GRNDSKPR_CACHE[cacheKey]) {
+            return window.GRNDSKPR_CACHE[cacheKey];
+        }
+
+        // Build API URL
+        let url = `${config.baseUrl}api-dashboard/${modalId}?repo_id=${config.repositoryId}`;
+        if (areaId) {
+            url += `&area_id=${areaId}`;
+        }
+
+        try {
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.success) {
+                // Cache the result
+                window.GRNDSKPR_CACHE[cacheKey] = result.data;
+                return result.data;
+            } else {
+                console.error('API error:', result.error);
+                return null;
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Render modal table with data
+     */
+    async function renderModalTable(modalId, areaId = null) {
+        let templateId, tbodyId;
+
+        // Determine which template and tbody to use
         switch(modalId) {
             case 'high-signal':
-                data = window.GRNDSKPR_DATA.issues.highSignal;
                 templateId = 'tmpl-high-signal-row';
                 tbodyId = 'tbody-high-signal';
                 break;
             case 'duplicates':
-                data = window.GRNDSKPR_DATA.issues.duplicates;
                 templateId = 'tmpl-duplicate-row';
                 tbodyId = 'tbody-duplicates';
                 break;
             case 'cleanup':
-                data = window.GRNDSKPR_DATA.issues.cleanup;
                 templateId = 'tmpl-cleanup-row';
                 tbodyId = 'tbody-cleanup';
                 break;
             case 'missing-info':
-                data = window.GRNDSKPR_DATA.issues.missing;
                 templateId = 'tmpl-missing-info-row';
                 tbodyId = 'tbody-missing-info';
                 break;
             case 'suggestions':
-                data = window.GRNDSKPR_DATA.issues.suggestions;
                 templateId = 'tmpl-suggestions-row';
                 tbodyId = 'tbody-suggestions';
                 break;
             default:
                 console.error('Unknown modal type:', modalId);
                 return;
-        }
-
-        // Filter by area if specified
-        if (areaId !== null && modalId !== 'duplicates') {
-            data = data.filter(issue => issue.area_id == areaId);
-        } else if (areaId !== null && modalId === 'duplicates') {
-            // Duplicates are special - filter by checking if any issue in the group matches
-            data = data.filter(dup => {
-                return dup.issues && dup.issues.some(issue => issue.area_id == areaId);
-            });
         }
 
         // Get template and tbody
@@ -107,7 +130,18 @@ window.GRNDSKPR.Dashboard = (function() {
             return;
         }
 
-        // Clear existing content
+        // Show loading state
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 2rem; color: #64748b;">Loading...</td></tr>';
+
+        // Fetch data
+        const data = await fetchModalData(modalId, areaId);
+
+        if (!data) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading data</td></tr>';
+            return;
+        }
+
+        // Clear loading state
         tbody.innerHTML = '';
 
         // Render each row
@@ -382,6 +416,9 @@ window.GRNDSKPR.Dashboard = (function() {
         // Store current filter
         currentAreaFilter = areaId;
 
+        // Clear cache since we're filtering by area
+        window.GRNDSKPR_CACHE = {};
+
         // Update Header
         const header = document.getElementById('analysis-header');
         header.innerHTML = `
@@ -404,15 +441,33 @@ window.GRNDSKPR.Dashboard = (function() {
             selectedRow.classList.add('area-table__row--selected');
         }
 
-        // Update Stats with pre-calculated counts for this area
-        if (window.GRNDSKPR_DATA && window.GRNDSKPR_DATA.areaCounts) {
-            const counts = window.GRNDSKPR_DATA.areaCounts;
-            document.getElementById('stat-total').innerText = count;
-            document.getElementById('stat-high-signal').innerText = counts.highSignal[areaId] || 0;
-            document.getElementById('stat-duplicates').innerText = counts.duplicates[areaId] || 0;
-            document.getElementById('stat-cleanup').innerText = counts.cleanup[areaId] || 0;
-            document.getElementById('stat-missing-info').innerText = counts.missing[areaId] || 0;
-            document.getElementById('stat-suggestions').innerText = counts.suggestions[areaId] || 0;
+        // Update total stat
+        document.getElementById('stat-total').innerText = count;
+
+        // Fetch and update filtered stats from API
+        updateFilteredStats(areaId);
+    }
+
+    /**
+     * Update filtered stats by fetching counts for a specific area
+     */
+    async function updateFilteredStats(areaId) {
+        const categories = ['high-signal', 'duplicates', 'cleanup', 'missing-info', 'suggestions'];
+
+        for (const category of categories) {
+            try {
+                const data = await fetchModalData(category, areaId);
+                const count = data ? data.length : 0;
+
+                // Update the stat display
+                const statId = category === 'missing-info' ? 'stat-missing-info' : `stat-${category}`;
+                const statEl = document.getElementById(statId);
+                if (statEl) {
+                    statEl.innerText = count;
+                }
+            } catch (error) {
+                console.error(`Error fetching ${category} count:`, error);
+            }
         }
     }
 
@@ -423,6 +478,9 @@ window.GRNDSKPR.Dashboard = (function() {
         // Clear filter
         currentAreaFilter = null;
 
+        // Clear cache
+        window.GRNDSKPR_CACHE = {};
+
         // Restore Header
         const header = document.getElementById('analysis-header');
         header.innerHTML = `<h3 class="text-lg font-bold text-slate-900">Analysis Findings</h3>`;
@@ -432,16 +490,8 @@ window.GRNDSKPR.Dashboard = (function() {
             row.classList.remove('area-table__row--selected');
         });
 
-        // Restore Stats
-        if (window.GRNDSKPR_DATA && window.GRNDSKPR_DATA.stats) {
-            const stats = window.GRNDSKPR_DATA.stats;
-            document.getElementById('stat-total').innerText = stats.total;
-            document.getElementById('stat-high-signal').innerText = stats.highSignal;
-            document.getElementById('stat-duplicates').innerText = stats.duplicates;
-            document.getElementById('stat-cleanup').innerText = stats.cleanup;
-            document.getElementById('stat-missing-info').innerText = stats.missing;
-            document.getElementById('stat-suggestions').innerText = stats.suggestions;
-        }
+        // Reload the page to restore original stats
+        location.reload();
     }
 
     /**

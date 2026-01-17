@@ -98,7 +98,7 @@
                 <?php endif; ?>
             </div>
 
-            <?php if (!empty($glob['issues'])): ?>
+            <?php if ($glob['total_issues'] > 0): ?>
             <div class="dashboard-layout">
 
                 <!-- Left Column: The Findings Feed -->
@@ -114,7 +114,7 @@
                                 <i class="fa-solid fa-layer-group"></i>
                             </div>
                             <div class="total-stats-card__stats">
-                                <h4 class="total-stats-card__number" id="stat-total"><?php echo count($glob['issues']); ?></h4>
+                                <h4 class="total-stats-card__number" id="stat-total"><?php echo $glob['total_issues']; ?></h4>
                                 <p class="total-stats-card__label">Total open bugs</p>
                             </div>
                         </div>
@@ -132,7 +132,7 @@
                                 <i class="fa-solid fa-fire"></i>
                             </div>
                             <div class="action-card__text">
-                                <h4 class="action-card__title"><span id="stat-high-signal"><?php echo count($glob['high_signal_issues']); ?></span> High Signal Issues</h4>
+                                <h4 class="action-card__title"><span id="stat-high-signal"><?php echo $glob['high_signal_count']; ?></span> High Signal Issues</h4>
                                 <p class="action-card__description">Valuable, actionable issues worth prioritizing</p>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
                                 <i class="fa-solid fa-clone"></i>
                             </div>
                             <div class="action-card__text">
-                                <h4 class="action-card__title"><span id="stat-duplicates"><?php echo count($glob['duplicates']); ?></span> Likely Duplicates</h4>
+                                <h4 class="action-card__title"><span id="stat-duplicates"><?php echo $glob['duplicates_count']; ?></span> Likely Duplicates</h4>
                                 <p class="action-card__description">Issues that appear to be semantically similar.</p>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
                                 <i class="fa-solid fa-archive"></i>
                             </div>
                             <div class="action-card__text">
-                                <h4 class="action-card__title"><span id="stat-cleanup"><?php echo count($glob['cleanup_candidates']); ?></span> Cleanup Candidates</h4>
+                                <h4 class="action-card__title"><span id="stat-cleanup"><?php echo $glob['cleanup_count']; ?></span> Cleanup Candidates</h4>
                                 <p class="action-card__description">Issues that should likely be closed</p>
                             </div>
                         </div>
@@ -180,7 +180,7 @@
                                 <i class="fa-solid fa-circle-question"></i>
                             </div>
                             <div class="action-card__text">
-                                <h4 class="action-card__title"><span id="stat-missing-info"><?php echo count($glob['missing_info_issues']); ?></span> Missing Critical Info</h4>
+                                <h4 class="action-card__title"><span id="stat-missing-info"><?php echo $glob['missing_info_count']; ?></span> Missing Critical Info</h4>
                                 <p class="action-card__description">Issues lacking critical information</p>
                             </div>
                         </div>
@@ -196,7 +196,7 @@
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                             </div>
                             <div class="action-card__text">
-                                <h4 class="action-card__title"><span id="stat-suggestions"><?php echo count($glob['label_suggestions']); ?></span> Label Suggestions</h4>
+                                <h4 class="action-card__title"><span id="stat-suggestions"><?php echo $glob['suggestions_count']; ?></span> Label Suggestions</h4>
                                 <p class="action-card__description">AI-recommended labels to improve categorization</p>
                             </div>
                         </div>
@@ -626,7 +626,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Likely Duplicates</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['duplicates']); ?> groups of issues that appear semantically similar (≥85% similarity).</p>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo $glob['duplicates_count']; ?> groups of issues that appear semantically similar (≥85% similarity).</p>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.closeModal('duplicates')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -713,7 +713,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">High Signal Issues Queue</h3>
-                            <p class="text-sm text-slate-500 mt-1"><?php echo count($glob['high_signal_issues']); ?> valuable, actionable issues identified by AI analysis.</p>
+                            <p class="text-sm text-slate-500 mt-1"><?php echo $glob['high_signal_count']; ?> valuable, actionable issues identified by AI analysis.</p>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.closeModal('high-signal')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -781,7 +781,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Cleanup Candidates</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['cleanup_candidates']); ?> issues identified as candidates for closure by AI analysis.</p>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo $glob['cleanup_count']; ?> issues identified as candidates for closure by AI analysis.</p>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.closeModal('cleanup')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -866,7 +866,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Issues Missing Context</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['missing_info_issues']); ?> issues missing critical information identified by AI analysis.</p>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo $glob['missing_info_count']; ?> issues missing critical information identified by AI analysis.</p>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.closeModal('missing-info')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -942,7 +942,7 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Review Label Suggestions</h3>
-                            <p class="text-sm text-slate-500 mt-1">Found <?php echo count($glob['label_suggestions']); ?> issues with AI-recommended labels from the repository.</p>
+                            <p class="text-sm text-slate-500 mt-1">Found <?php echo $glob['suggestions_count']; ?> issues with AI-recommended labels from the repository.</p>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.closeModal('suggestions')" class="text-slate-400 hover:text-slate-500">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -1006,62 +1006,14 @@
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-utility.js"></script>
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-core.js"></script>
     <script>
-        // Initialize dashboard data
-        window.GRNDSKPR_DATA = {
-            stats: {
-                total: <?php echo count($glob['issues']); ?>,
-                highSignal: <?php echo count($glob['high_signal_issues']); ?>,
-                duplicates: <?php echo count($glob['duplicates']); ?>,
-                cleanup: <?php echo count($glob['cleanup_candidates']); ?>,
-                missing: <?php echo count($glob['missing_info_issues']); ?>,
-                suggestions: <?php echo count($glob['label_suggestions']); ?>
-            },
-            areaCounts: {
-                highSignal: {},
-                duplicates: {},
-                cleanup: {},
-                missing: {},
-                suggestions: {}
-            },
-            issues: {
-                highSignal: <?php echo json_encode($glob['high_signal_issues'], JSON_HEX_TAG | JSON_HEX_AMP); ?>,
-                duplicates: <?php echo json_encode($glob['duplicates'], JSON_HEX_TAG | JSON_HEX_AMP); ?>,
-                cleanup: <?php echo json_encode($glob['cleanup_candidates'], JSON_HEX_TAG | JSON_HEX_AMP); ?>,
-                missing: <?php echo json_encode($glob['missing_info_issues'], JSON_HEX_TAG | JSON_HEX_AMP); ?>,
-                suggestions: <?php echo json_encode($glob['label_suggestions'], JSON_HEX_TAG | JSON_HEX_AMP); ?>
-            }
+        // Initialize dashboard configuration
+        window.GRNDSKPR_CONFIG = {
+            baseUrl: '<?php echo BASEURL; ?>',
+            repositoryId: <?php echo isset($glob['selected_repo']) ? $glob['selected_repo']['id'] : 'null'; ?>
         };
 
-        // Populate area counts
-        <?php
-        // Build area counts for each category
-        foreach ($glob['high_signal_issues'] as $issue) {
-            $areaId = $issue['area_id'] ?? 0;
-            echo "GRNDSKPR_DATA.areaCounts.highSignal[$areaId] = (GRNDSKPR_DATA.areaCounts.highSignal[$areaId] || 0) + 1;\n        ";
-        }
-        foreach ($glob['cleanup_candidates'] as $issue) {
-            $areaId = $issue['area_id'] ?? 0;
-            echo "GRNDSKPR_DATA.areaCounts.cleanup[$areaId] = (GRNDSKPR_DATA.areaCounts.cleanup[$areaId] || 0) + 1;\n        ";
-        }
-        foreach ($glob['missing_info_issues'] as $issue) {
-            $areaId = $issue['area_id'] ?? 0;
-            echo "GRNDSKPR_DATA.areaCounts.missing[$areaId] = (GRNDSKPR_DATA.areaCounts.missing[$areaId] || 0) + 1;\n        ";
-        }
-        foreach ($glob['label_suggestions'] as $issue) {
-            $areaId = $issue['area_id'] ?? 0;
-            echo "GRNDSKPR_DATA.areaCounts.suggestions[$areaId] = (GRNDSKPR_DATA.areaCounts.suggestions[$areaId] || 0) + 1;\n        ";
-        }
-        // Duplicates are special - they have an array of issues
-        foreach ($glob['duplicates'] as $duplicate) {
-            if (!empty($duplicate['issues'])) {
-                foreach ($duplicate['issues'] as $issue) {
-                    $areaId = $issue['area_id'] ?? 0;
-                    echo "GRNDSKPR_DATA.areaCounts.duplicates[$areaId] = (GRNDSKPR_DATA.areaCounts.duplicates[$areaId] || 0) + 1;\n        ";
-                    break; // Only count the duplicate group once per area
-                }
-            }
-        }
-        ?>
+        // Cache for modal data to avoid refetching
+        window.GRNDSKPR_CACHE = {};
 
         // Handle session messages
         document.addEventListener('DOMContentLoaded', function() {

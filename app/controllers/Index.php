@@ -9,31 +9,43 @@ $repoModel = new Repository();
 $glob['repositories'] = $repoModel->findAll();
 $glob['selected_repo'] = !empty($glob['repositories']) ? $glob['repositories'][0] : null;
 
-/* LOAD ISSUES FOR SELECTED REPO ---- */
+/* LOAD ISSUE COUNTS FOR SELECTED REPO ---- */
 if ($glob['selected_repo']) {
-	$issueModel = new Issue();
-	$glob['issues'] = $issueModel->findByRepository($glob['selected_repo']['id']);
-	$totalIssues = count($glob['issues']);
+	$db = Database::getInstance();
+	$repoId = $glob['selected_repo']['id'];
 
-	/* LOAD AREAS WITH ISSUE COUNTS ---- */
+	// Get total issue count
+	$totalSql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ?";
+	$totalResult = $db->fetch($totalSql, [$repoId]);
+	$glob['total_issues'] = $totalResult['count'] ?? 0;
+
+	/* LOAD AREAS WITH ISSUE COUNTS (using SQL GROUP BY) ---- */
 	$areaModel = new Area();
-	$areas = $areaModel->findByRepository($glob['selected_repo']['id']);
+	$areas = $areaModel->findByRepository($repoId);
 
-	// Get issue counts for each area
+	// Get issue counts per area using SQL
+	$areaSql = "SELECT area_id, COUNT(*) as count
+	            FROM issues
+	            WHERE repository_id = ? AND area_id IS NOT NULL
+	            GROUP BY area_id";
+	$areaCounts = $db->fetchAll($areaSql, [$repoId]);
+
+	// Create lookup map
+	$areaCountMap = [];
+	foreach ($areaCounts as $row) {
+		$areaCountMap[$row['area_id']] = $row['count'];
+	}
+
+	// Build area stats array
 	$areaStats = [];
 	foreach ($areas as $area) {
-		$count = 0;
-		foreach ($glob['issues'] as $issue) {
-			if ($issue['area_id'] == $area['id']) {
-				$count++;
-			}
-		}
+		$count = $areaCountMap[$area['id']] ?? 0;
 		if ($count > 0) {
 			$areaStats[] = [
 				'id' => $area['id'],
 				'name' => $area['name'],
 				'count' => $count,
-				'percentage' => $totalIssues > 0 ? round(($count / $totalIssues) * 100) : 0
+				'percentage' => $glob['total_issues'] > 0 ? round(($count / $glob['total_issues']) * 100) : 0
 			];
 		}
 	}
@@ -45,101 +57,37 @@ if ($glob['selected_repo']) {
 
 	$glob['area_stats'] = $areaStats;
 
-	/* GET HIGH SIGNAL ISSUES ---- */
-	$highSignalIssues = array_filter($glob['issues'], function($issue) {
-		return !empty($issue['is_high_signal']);
-	});
+	/* GET CATEGORY COUNTS ---- */
+	// High signal count
+	$highSignalSql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_high_signal = 1";
+	$highSignalResult = $db->fetch($highSignalSql, [$repoId]);
+	$glob['high_signal_count'] = $highSignalResult['count'] ?? 0;
 
-	// Calculate priority score for each high signal issue
-	foreach ($highSignalIssues as &$issue) {
-		$score = 0;
+	// Cleanup candidates count
+	$cleanupSql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_cleanup_candidate = 1";
+	$cleanupResult = $db->fetch($cleanupSql, [$repoId]);
+	$glob['cleanup_count'] = $cleanupResult['count'] ?? 0;
 
-		// Factor 1: Community engagement (max 40 points)
-		$engagement = ($issue['reactions_total'] ?? 0) + ($issue['comments_count'] ?? 0);
-		$score += min(40, $engagement * 2);
+	// Missing info count
+	$missingInfoSql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_missing_context = 1";
+	$missingInfoResult = $db->fetch($missingInfoSql, [$repoId]);
+	$glob['missing_info_count'] = $missingInfoResult['count'] ?? 0;
 
-		// Factor 2: Age (newer issues get more points, max 25 points)
-		$age = time() - $issue['created_at'];
-		$daysOld = $age / 86400;
-		if ($daysOld < 7) {
-			$score += 25; // Very recent
-		} elseif ($daysOld < 30) {
-			$score += 20; // Recent
-		} elseif ($daysOld < 90) {
-			$score += 15; // Moderate
-		} elseif ($daysOld < 180) {
-			$score += 10; // Aging
-		} else {
-			$score += 5; // Old but still high signal
-		}
+	// Label suggestions count
+	$suggestionsSql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_missing_labels = 1 AND suggested_labels IS NOT NULL";
+	$suggestionsResult = $db->fetch($suggestionsSql, [$repoId]);
+	$glob['suggestions_count'] = $suggestionsResult['count'] ?? 0;
 
-		// Factor 3: Has assignee (shows active work, max 15 points)
-		if (!empty($issue['assignees']) && count($issue['assignees']) > 0) {
-			$score += 15;
-		}
-
-		// Factor 4: Has milestone (shows planning/prioritization, max 10 points)
-		if (!empty($issue['milestone'])) {
-			$score += 10;
-		}
-
-		// Factor 5: Label signals (max 10 points)
-		$labels = is_array($issue['labels']) ? $issue['labels'] : [];
-		$priorityLabels = ['critical', 'urgent', 'high priority', 'p0', 'p1', 'blocker', 'security'];
-		$hasPriorityLabel = false;
-		foreach ($labels as $label) {
-			$labelLower = strtolower($label);
-			foreach ($priorityLabels as $priorityLabel) {
-				if (strpos($labelLower, $priorityLabel) !== false) {
-					$hasPriorityLabel = true;
-					break 2;
-				}
-			}
-		}
-		if ($hasPriorityLabel) {
-			$score += 10;
-		}
-
-		$issue['priority_score'] = min(100, $score);
-	}
-	unset($issue);
-
-	// Filter to only show issues with score of 50 or more
-	$highSignalIssues = array_filter($highSignalIssues, function($issue) {
-		return $issue['priority_score'] >= 50;
-	});
-
-	// Sort by priority score (highest first)
-	usort($highSignalIssues, function($a, $b) {
-		return $b['priority_score'] - $a['priority_score'];
-	});
-
-	$glob['high_signal_issues'] = array_values($highSignalIssues);
-
-	/* GET CLEANUP CANDIDATES ---- */
-	$cleanupCandidates = array_filter($glob['issues'], function($issue) {
-		return !empty($issue['is_cleanup_candidate']);
-	});
-	$glob['cleanup_candidates'] = array_values($cleanupCandidates);
-
-	/* GET MISSING CRITICAL INFO ---- */
-	$missingInfo = array_filter($glob['issues'], function($issue) {
-		return !empty($issue['is_missing_context']);
-	});
-	$glob['missing_info_issues'] = array_values($missingInfo);
-
-	/* GET LABEL SUGGESTIONS ---- */
-	$labelSuggestions = array_filter($glob['issues'], function($issue) {
-		return !empty($issue['is_missing_labels']) && !empty($issue['suggested_labels']);
-	});
-	$glob['label_suggestions'] = array_values($labelSuggestions);
+	// Duplicates count from session
+	$glob['duplicates_count'] = isset($_SESSION['analysis_results']['duplicates']) ? count($_SESSION['analysis_results']['duplicates']) : 0;
 } else {
-	$glob['issues'] = [];
+	$glob['total_issues'] = 0;
 	$glob['area_stats'] = [];
-	$glob['high_signal_issues'] = [];
-	$glob['cleanup_candidates'] = [];
-	$glob['missing_info_issues'] = [];
-	$glob['label_suggestions'] = [];
+	$glob['high_signal_count'] = 0;
+	$glob['cleanup_count'] = 0;
+	$glob['missing_info_count'] = 0;
+	$glob['suggestions_count'] = 0;
+	$glob['duplicates_count'] = 0;
 }
 
 /* LOAD ANALYSIS RESULTS ---- */
