@@ -49,12 +49,6 @@ require_once(COREPATH.'libraries/Csrf.php');
 /* AUTH ------------------------------------------- */
 require_once (COREPATH.'libraries/Auth.php');
 
-/* IMAGES ------------------------------------------- */
-require_once (COREPATH.'libraries/Image.php');
-
-/* EMAIL TEMPLATES ------------------------------------------- */
-require_once(APPPATH.'email/templates.php');
-
 /* HASHID ------------------------------------------- */
 require_once(COREPATH.'libraries/hashid/HashGenerator.php');
 require_once(COREPATH.'libraries/hashid/Hashid.php');
