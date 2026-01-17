@@ -99,130 +99,110 @@
             </div>
 
             <?php if (!empty($glob['issues'])): ?>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="dashboard-layout">
 
                 <!-- Left Column: The Findings Feed -->
-                <div class="lg:col-span-2 space-y-4">
-                    <div id="analysis-header" class="flex items-center gap-2">
-                        <h3 class="text-lg font-bold text-slate-900">Analysis Findings</h3>
+                <div class="findings-feed">
+                    <div id="analysis-header" class="findings-header">
+                        <h3 class="findings-header__title">Analysis Findings</h3>
                     </div>
 
                     <!-- Stat Card: Total -->
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="p-3 bg-slate-100 rounded-lg text-slate-500">
-                                <i class="fa-solid fa-layer-group text-xl"></i>
+                    <div class="total-stats-card">
+                        <div class="total-stats-card__content">
+                            <div class="total-stats-card__icon">
+                                <i class="fa-solid fa-layer-group"></i>
                             </div>
-                            <div>
-                                <h4 class="text-2xl font-bold text-slate-900" id="stat-total"><?php echo count($glob['issues']); ?></h4>
-                                <p class="text-sm text-slate-500">Total open bugs</p>
+                            <div class="total-stats-card__stats">
+                                <h4 class="total-stats-card__number" id="stat-total"><?php echo count($glob['issues']); ?></h4>
+                                <p class="total-stats-card__label">Total open bugs</p>
                             </div>
                         </div>
                         <?php if (isset($glob['selected_repo'])): ?>
-                            <a href="https://github.com/<?php echo htmlspecialchars($glob['selected_repo']['owner']); ?>/<?php echo htmlspecialchars($glob['selected_repo']['name']); ?>/issues?q=is%3Aissue%20state%3Aopen%20label%3A<?php echo urlencode($glob['selected_repo']['bug_label']); ?>" target="_blank" class="text-sm text-slate-400 hover:text-slate-600"><i class="fa-brands fa-github mr-1"></i> View on GitHub</a>
+                            <a href="https://github.com/<?php echo htmlspecialchars($glob['selected_repo']['owner']); ?>/<?php echo htmlspecialchars($glob['selected_repo']['name']); ?>/issues?q=is%3Aissue%20state%3Aopen%20label%3A<?php echo urlencode($glob['selected_repo']['bug_label']); ?>" target="_blank" class="total-stats-card__github-link"><i class="fa-brands fa-github"></i> View on GitHub</a>
                         <?php else: ?>
-                            <a href="#" class="text-sm text-slate-400 hover:text-slate-600"><i class="fa-brands fa-github mr-1"></i> View on GitHub</a>
+                            <a href="#" class="total-stats-card__github-link"><i class="fa-brands fa-github"></i> View on GitHub</a>
                         <?php endif; ?>
                     </div>
 
                     <!-- Action Card: High Signal -->
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-red-500 group hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-4">
-                                <div class="pt-1">
-                                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm">
-                                        <i class="fa-solid fa-fire"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-high-signal"><?php echo count($glob['high_signal_issues']); ?></span> High Signal Issues</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Valuable, actionable issues worth prioritizing</p>
-                                </div>
+                    <div class="action-card action-card--high-signal">
+                        <div class="action-card__content">
+                            <div class="action-card__icon action-card__icon--high-signal">
+                                <i class="fa-solid fa-fire"></i>
                             </div>
-                            <button onclick="GRNDSKPR.Dashboard.openModal('high-signal')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                                View Issues
-                            </button>
+                            <div class="action-card__text">
+                                <h4 class="action-card__title"><span id="stat-high-signal"><?php echo count($glob['high_signal_issues']); ?></span> High Signal Issues</h4>
+                                <p class="action-card__description">Valuable, actionable issues worth prioritizing</p>
+                            </div>
                         </div>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('high-signal')" class="action-card__button">
+                            View Issues
+                        </button>
                     </div>
 
                     <!-- Action Card: Duplicates -->
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-amber-400 group hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-4">
-                                <div class="pt-1">
-                                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
-                                        <i class="fa-solid fa-clone"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-duplicates"><?php echo count($glob['duplicates']); ?></span> Likely Duplicates</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Issues that appear to be semantically similar.</p>
-                                </div>
+                    <div class="action-card action-card--duplicates">
+                        <div class="action-card__content">
+                            <div class="action-card__icon action-card__icon--duplicates">
+                                <i class="fa-solid fa-clone"></i>
                             </div>
-                            <button onclick="GRNDSKPR.Dashboard.openModal('duplicates')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-emerald-700 hover:border-emerald-300 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                                View Issues
-                            </button>
+                            <div class="action-card__text">
+                                <h4 class="action-card__title"><span id="stat-duplicates"><?php echo count($glob['duplicates']); ?></span> Likely Duplicates</h4>
+                                <p class="action-card__description">Issues that appear to be semantically similar.</p>
+                            </div>
                         </div>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('duplicates')" class="action-card__button action-card__button--duplicates">
+                            View Issues
+                        </button>
                     </div>
 
                     <!-- Action Card: Should Close -->
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-slate-400 group hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-4">
-                                <div class="pt-1">
-                                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
-                                        <i class="fa-solid fa-archive"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-cleanup"><?php echo count($glob['cleanup_candidates']); ?></span> Cleanup Candidates</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Issues that should likely be closed</p>
-                                </div>
+                    <div class="action-card action-card--cleanup">
+                        <div class="action-card__content">
+                            <div class="action-card__icon action-card__icon--cleanup">
+                                <i class="fa-solid fa-archive"></i>
                             </div>
-                            <button onclick="GRNDSKPR.Dashboard.openModal('cleanup')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                                View Issues
-                            </button>
+                            <div class="action-card__text">
+                                <h4 class="action-card__title"><span id="stat-cleanup"><?php echo count($glob['cleanup_candidates']); ?></span> Cleanup Candidates</h4>
+                                <p class="action-card__description">Issues that should likely be closed</p>
+                            </div>
                         </div>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('cleanup')" class="action-card__button">
+                            View Issues
+                        </button>
                     </div>
 
                     <!-- Action Card: Missing Info -->
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-blue-400 group hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-4">
-                                <div class="pt-1">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                                        <i class="fa-solid fa-circle-question"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-missing-info"><?php echo count($glob['missing_info_issues']); ?></span> Missing Critical Info</h4>
-                                    <p class="text-sm text-slate-500 mt-1">Issues lacking critical information</p>
-                                </div>
+                    <div class="action-card action-card--missing-info">
+                        <div class="action-card__content">
+                            <div class="action-card__icon action-card__icon--missing-info">
+                                <i class="fa-solid fa-circle-question"></i>
                             </div>
-                            <button onclick="GRNDSKPR.Dashboard.openModal('missing-info')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                                View Issues
-                            </button>
+                            <div class="action-card__text">
+                                <h4 class="action-card__title"><span id="stat-missing-info"><?php echo count($glob['missing_info_issues']); ?></span> Missing Critical Info</h4>
+                                <p class="action-card__description">Issues lacking critical information</p>
+                            </div>
                         </div>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('missing-info')" class="action-card__button">
+                            View Issues
+                        </button>
                     </div>
 
                     <!-- Action Card: Suggestions -->
-                    <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 border-l-4 border-l-purple-400 group hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex gap-4">
-                                <div class="pt-1">
-                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm">
-                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-bold text-slate-900"><span id="stat-suggestions"><?php echo count($glob['label_suggestions']); ?></span> Label Suggestions</h4>
-                                    <p class="text-sm text-slate-500 mt-1">AI-recommended labels to improve categorization</p>
-                                </div>
+                    <div class="action-card action-card--suggestions">
+                        <div class="action-card__content">
+                            <div class="action-card__icon action-card__icon--suggestions">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
                             </div>
-                            <button onclick="GRNDSKPR.Dashboard.openModal('suggestions')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
-                                Review Suggestions
-                            </button>
+                            <div class="action-card__text">
+                                <h4 class="action-card__title"><span id="stat-suggestions"><?php echo count($glob['label_suggestions']); ?></span> Label Suggestions</h4>
+                                <p class="action-card__description">AI-recommended labels to improve categorization</p>
+                            </div>
                         </div>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('suggestions')" class="action-card__button">
+                            Review Suggestions
+                        </button>
                     </div>
 
                 </div>
