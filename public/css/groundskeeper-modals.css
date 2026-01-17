@@ -129,7 +129,7 @@
 /* ---- */
 .modal__toolbar {
 	background: #f8fafc;
-	padding: 0.75rem 1rem;
+	padding: 1rem 1.5rem;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -304,6 +304,7 @@
 
 .modal__table-header--checkbox {
 	width: 2.5rem;
+	text-align: left;
 }
 
 .modal__table-header--actions {
@@ -337,6 +338,7 @@
 
 .modal__table-cell {
 	padding: 1rem 1.5rem;
+	text-align: left;
 }
 
 .modal__table-cell--nowrap {

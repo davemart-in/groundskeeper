@@ -181,6 +181,9 @@
 	font-weight: 500;
 	text-decoration: none;
 	transition: color 0.15s;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
 }
 
 .settings-header__action-link--reset {
@@ -551,7 +554,8 @@
 .label-mapping-section__footer {
 	padding-top: 1rem;
 	display: flex;
-	justify-content: flex-end;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .label-mapping-section__save-btn {

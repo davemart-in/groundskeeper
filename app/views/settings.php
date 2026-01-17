@@ -177,11 +177,6 @@
 											<?php endforeach; ?>
 										</ul>
 									</div>
-									<form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" class="inline">
-										<button type="submit" class="areas-section__reset-btn" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
-											<i class="fa-solid fa-rotate-left"></i> Reset Areas
-										</button>
-									</form>
 								<?php else: ?>
 									<div class="areas-section__empty">
 										<i class="fa-solid fa-info-circle"></i>
@@ -191,6 +186,13 @@
 							</div>
 
 							<div class="label-mapping-section__footer">
+								<?php if (!empty($glob['areas'])): ?>
+									<form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" style="display: inline;">
+										<button type="submit" class="areas-section__reset-btn" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
+											<i class="fa-solid fa-rotate-left"></i> Reset Areas
+										</button>
+									</form>
+								<?php endif; ?>
 								<button type="submit" class="label-mapping-section__save-btn">Save Changes</button>
 							</div>
 						</form>
