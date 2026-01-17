@@ -299,26 +299,26 @@
         </div>
 
         <!-- SETTINGS TAB -->
-        <div id="view-settings" class="<?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'hidden' : ''; ?> animate-fade-in h-[calc(100vh-140px)]">
-            <div class="flex h-full bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+        <div id="view-settings" class="settings-view <?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'hidden' : ''; ?>">
+            <div class="settings-view__container">
                 
                 <!-- Sidebar -->
-                <div class="w-64 bg-slate-50 border-r border-slate-200 flex flex-col">
-                    <div class="p-4 border-b border-slate-200 flex justify-between items-center">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Repositories</span>
-                        <button onclick="GRNDSKPR.Dashboard.openModal('add-repo')" class="text-emerald-600 hover:text-emerald-700 text-xs font-bold"><i class="fa-solid fa-plus"></i> Add</button>
+                <div class="settings-sidebar">
+                    <div class="settings-sidebar__header">
+                        <span class="settings-sidebar__title">Repositories</span>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('add-repo')" class="settings-sidebar__add-btn"><i class="fa-solid fa-plus"></i> Add</button>
                     </div>
-                    <div class="flex-1 overflow-y-auto">
-                        <nav class="space-y-1 p-2">
+                    <div class="settings-sidebar__nav">
+                        <nav class="settings-sidebar__nav-list">
                             <?php if (!empty($glob['repositories'])): ?>
                                 <?php foreach ($glob['repositories'] as $repo): ?>
-                                    <a href="<?php echo BASEURL; ?>settings/<?php echo $repo['id']; ?>" class="<?php echo (isset($glob['selected_repo']) && $glob['selected_repo']['id'] === $repo['id']) ? 'bg-white border border-slate-200 text-slate-900 shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'; ?> group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                                        <i class="fa-brands fa-github text-slate-400 mr-3"></i>
-                                        <span class="truncate"><?php echo htmlspecialchars($repo['full_name']); ?></span>
+                                    <a href="<?php echo BASEURL; ?>settings/<?php echo $repo['id']; ?>" class="settings-sidebar__nav-item <?php echo (isset($glob['selected_repo']) && $glob['selected_repo']['id'] === $repo['id']) ? 'settings-sidebar__nav-item--active' : 'settings-sidebar__nav-item--inactive'; ?>">
+                                        <i class="fa-brands fa-github settings-sidebar__nav-icon"></i>
+                                        <span class="settings-sidebar__nav-text"><?php echo htmlspecialchars($repo['full_name']); ?></span>
                                     </a>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <div class="p-4 text-center text-slate-400 text-xs">
+                                <div class="settings-sidebar__empty">
                                     No repositories yet
                                 </div>
                             <?php endif; ?>
@@ -327,49 +327,49 @@
                 </div>
 
                 <!-- Content -->
-                <div class="flex-1 overflow-y-auto p-8 <?php echo (empty($glob['repositories']) || !isset($glob['selected_repo'])) ? 'flex items-center justify-center' : ''; ?>">
+                <div class="settings-content <?php echo (empty($glob['repositories']) || !isset($glob['selected_repo'])) ? 'settings-content--centered' : ''; ?>">
                     <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
-                    <div class="max-w-2xl">
+                    <div class="settings-content__wrapper">
                             <!-- Repo selected - show header -->
-                            <div class="flex justify-between items-start mb-8">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <h2 class="text-xl font-bold text-slate-900"><?php echo htmlspecialchars($glob['selected_repo']['full_name']); ?></h2>
+                            <div class="settings-header">
+                                <div class="settings-header__info">
+                                    <div class="settings-header__title-row">
+                                        <h2 class="settings-header__title"><?php echo htmlspecialchars($glob['selected_repo']['full_name']); ?></h2>
                                         <?php if (isset($glob['user']) && $glob['user']): ?>
-                                            <div class="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200 text-xs font-medium">
-                                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            <div class="connection-badge connection-badge--connected">
+                                                <span class="connection-badge__indicator connection-badge__indicator--connected"></span>
                                                 Connected
                                             </div>
                                         <?php else: ?>
-                                            <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
-                                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                            <div class="connection-badge connection-badge--disconnected">
+                                                <span class="connection-badge__indicator connection-badge__indicator--disconnected"></span>
                                                 Disconnected
                                             </div>
                                         <?php endif; ?>
                                     </div>
-                                    <p class="text-sm text-slate-500 mt-1">Manage how Groundskeeper interacts with this repo.</p>
+                                    <p class="settings-header__description">Manage how Groundskeeper interacts with this repo.</p>
                                 </div>
-                                <div class="flex gap-3">
-                                    <a href="<?php echo BASEURL; ?>reset/<?php echo $glob['selected_repo']['id']; ?>" class="text-sm text-yellow-600 hover:text-yellow-700 font-medium">
-                                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Data
+                                <div class="settings-header__actions">
+                                    <a href="<?php echo BASEURL; ?>reset/<?php echo $glob['selected_repo']['id']; ?>" class="settings-header__action-link settings-header__action-link--reset">
+                                        <i class="fa-solid fa-rotate-left"></i> Reset Data
                                     </a>
                                     <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/delete" onsubmit="return confirm('Are you sure you want to remove this repository?');">
-                                        <button type="submit" class="text-sm text-red-600 hover:text-red-700 font-medium">
-                                            <i class="fa-solid fa-trash mr-1"></i> Remove
+                                        <button type="submit" class="settings-header__action-btn settings-header__action-btn--delete">
+                                            <i class="fa-solid fa-trash"></i> Remove
                                         </button>
                                     </form>
                                 </div>
                             </div>
                         <?php else: ?>
                             <!-- No repos - show blank slate -->
-                            <div class="text-center">
-                                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fa-brands fa-github text-slate-400 text-2xl"></i>
+                            <div class="settings-blank-slate">
+                                <div class="settings-blank-slate__icon">
+                                    <i class="fa-brands fa-github"></i>
                                 </div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-2">No repositories connected</h3>
-                                <p class="text-sm text-slate-500 mb-6">Add your first repository to start analyzing issues.</p>
-                                <button onclick="GRNDSKPR.Dashboard.openModal('add-repo')" class="bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700">
-                                    <i class="fa-solid fa-plus mr-2"></i>
+                                <h3 class="settings-blank-slate__title">No repositories connected</h3>
+                                <p class="settings-blank-slate__description">Add your first repository to start analyzing issues.</p>
+                                <button onclick="GRNDSKPR.Dashboard.openModal('add-repo')" class="settings-blank-slate__button">
+                                    <i class="fa-solid fa-plus"></i>
                                     Add Your First Repository
                                 </button>
                             </div>
@@ -377,50 +377,52 @@
 
                         <?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
                         <!-- Config Form -->
-                        <div class="space-y-8">
+                        <div class="settings-sections">
                             <!-- GitHub Connection Section -->
-                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                <h3 class="text-sm font-bold text-slate-900 mb-2">GitHub Connection</h3>
-                                <p class="text-xs text-slate-500 mb-4">View and analyze issues using your GitHub username and optional Personal Access Token.</p>
+                            <div class="github-connection-section">
+                                <h3 class="github-connection-section__title">GitHub Connection</h3>
+                                <p class="github-connection-section__description">View and analyze issues using your GitHub username and optional Personal Access Token.</p>
 
                                 <?php if (isset($glob['user']) && $glob['user']): ?>
                                     <!-- Connected state -->
-                                    <div class="flex items-center gap-3 mb-4">
+                                    <div class="github-connection-section__user">
                                         <?php if (!empty($glob['user']['avatar_url'])): ?>
-                                            <img src="<?php echo htmlspecialchars($glob['user']['avatar_url']); ?>" alt="Avatar" class="w-10 h-10 rounded-full">
+                                            <img src="<?php echo htmlspecialchars($glob['user']['avatar_url']); ?>" alt="Avatar" class="github-connection-section__avatar">
                                         <?php endif; ?>
-                                        <div>
-                                            <p class="text-sm text-slate-600">Connected as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
-                                            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-eye"></i> Read-only access</p>
+                                        <div class="github-connection-section__user-info">
+                                            <p class="github-connection-section__user-name">Connected as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
+                                            <p class="github-connection-section__access-mode"><i class="fa-solid fa-eye"></i> Read-only access</p>
                                         </div>
                                     </div>
-                                    <div class="flex gap-3">
-                                        <button onclick="document.getElementById('pat-form').classList.toggle('hidden')" class="text-sm text-slate-600 border border-slate-300 bg-white px-3 py-1.5 rounded hover:bg-slate-50">Update Token</button>
-                                        <a href="<?php echo BASEURL; ?>settings/disconnect" class="text-sm text-red-600 border border-red-200 bg-white px-3 py-1.5 rounded hover:bg-red-50">Disconnect</a>
+                                    <div class="github-connection-section__actions">
+                                        <button onclick="document.getElementById('pat-form').classList.toggle('hidden')" class="github-connection-section__button github-connection-section__button--update">Update Token</button>
+                                        <a href="<?php echo BASEURL; ?>settings/disconnect" class="github-connection-section__button github-connection-section__button--disconnect">Disconnect</a>
                                     </div>
 
                                     <!-- PAT Update Form (hidden by default) -->
-                                    <div id="pat-form" class="hidden mt-4 pt-4 border-t border-slate-200">
+                                    <div id="pat-form" class="github-connection-section__pat-form hidden">
                                         <form method="POST" action="<?php echo BASEURL; ?>settings/update-token">
-                                            <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token</label>
-                                            <input type="text" name="personal_access_token" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="ghp_xxxxxxxxxxxx">
-                                            <p class="text-xs text-slate-500 mt-2">Update your PAT to increase rate limits (5000 req/hr)</p>
-                                            <button type="submit" class="mt-3 bg-emerald-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-emerald-700">Update Token</button>
+                                            <div class="settings-form-field">
+                                                <label class="settings-form-field__label">Personal Access Token</label>
+                                                <input type="text" name="personal_access_token" class="settings-form-field__input" placeholder="ghp_xxxxxxxxxxxx">
+                                                <p class="settings-form-field__help">Update your PAT to increase rate limits (5000 req/hr)</p>
+                                            </div>
+                                            <button type="submit" class="settings-form-field__submit">Update Token</button>
                                         </form>
                                     </div>
                                 <?php else: ?>
                                     <!-- Not connected state -->
-                                    <form method="POST" action="<?php echo BASEURL; ?>settings/connect-readonly" class="space-y-3">
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-700 mb-2">GitHub Username</label>
-                                            <input type="text" name="github_username" required class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="your-github-username">
+                                    <form method="POST" action="<?php echo BASEURL; ?>settings/connect-readonly" class="github-connection-section__connect-form">
+                                        <div class="settings-form-field">
+                                            <label class="settings-form-field__label">GitHub Username</label>
+                                            <input type="text" name="github_username" required class="settings-form-field__input" placeholder="your-github-username">
                                         </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-slate-700 mb-2">Personal Access Token (optional)</label>
-                                            <input type="text" name="personal_access_token" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border" placeholder="ghp_xxxxxxxxxxxx">
-                                            <p class="text-xs text-slate-500 mt-1">Without token: 60 requests/hour. With token: 5000 requests/hour. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Groundskeeper" target="_blank" class="text-emerald-600 hover:underline">Create token</a></p>
+                                        <div class="settings-form-field">
+                                            <label class="settings-form-field__label">Personal Access Token (optional)</label>
+                                            <input type="text" name="personal_access_token" class="settings-form-field__input" placeholder="ghp_xxxxxxxxxxxx">
+                                            <p class="settings-form-field__help">Without token: 60 requests/hour. With token: 5000 requests/hour. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Groundskeeper" target="_blank">Create token</a></p>
                                         </div>
-                                        <button type="submit" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700">
+                                        <button type="submit" class="github-connection-section__submit-btn">
                                             <i class="fa-brands fa-github"></i>
                                             Connect GitHub
                                         </button>
@@ -430,68 +432,66 @@
 
                             <?php if ($glob['selected_repo']['last_synced_at']): ?>
                             <!-- Labels Section -->
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-4 border-b border-slate-200 pb-2">Label Mapping</h3>
+                            <div class="label-mapping-section">
+                                <h3 class="label-mapping-section__title">Label Mapping</h3>
 
-                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/update">
-                                    <div class="grid gap-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-2">Bug Label</label>
-                                            <p class="text-xs text-slate-500 mb-2">Which label indicates an issue is a bug?</p>
-                                            <input type="text" name="bug_label" value="<?php echo htmlspecialchars($glob['selected_repo']['bug_label']); ?>" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md bg-white border" placeholder="bug">
-                                            <p class="text-xs text-slate-500 mt-1">Examples: bug, type: bug, defect</p>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-slate-700 mb-2">Priority Labels</label>
-                                            <p class="text-xs text-slate-500 mb-2">Enter labels used to denote priority levels, one per line.</p>
-
-                                            <?php
-                                            $priorityLabelsText = '';
-                                            if (!empty($glob['selected_repo']['priority_labels'])) {
-                                                $priorityLabels = json_decode($glob['selected_repo']['priority_labels'], true);
-                                                if (is_array($priorityLabels)) {
-                                                    $priorityLabelsText = implode("\n", $priorityLabels);
-                                                }
-                                            }
-                                            ?>
-
-                                            <textarea name="priority_labels_text" rows="4" class="block w-full px-3 py-2 text-sm border-slate-300 rounded-md bg-white border focus:outline-none focus:ring-emerald-500 focus:border-emerald-500" placeholder="priority: high&#10;priority: medium&#10;priority: low"><?php echo htmlspecialchars($priorityLabelsText); ?></textarea>
-                                            <p class="text-xs text-slate-500 mt-1">Leave blank if this repository doesn't use priority labels.</p>
-                                        </div>
-
-                                        <!-- Areas Section -->
-                                        <div class="border-t border-slate-200 pt-4">
-                                            <label class="block text-sm font-medium text-slate-700 mb-2">Functional Areas</label>
-                                            <p class="text-xs text-slate-500 mb-3">Areas are auto-detected on first analysis using AI. They help categorize issues by codebase section.</p>
-
-                                            <?php if (!empty($glob['areas'])): ?>
-                                                <div class="bg-slate-50 rounded-md p-3 mb-3">
-                                                    <ul class="space-y-1 text-sm text-slate-700">
-                                                        <?php foreach ($glob['areas'] as $area): ?>
-                                                            <li class="flex items-center">
-                                                                <i class="fa-solid fa-circle text-xs text-emerald-500 mr-2"></i>
-                                                                <?php echo htmlspecialchars($area['name']); ?>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </div>
-                                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" class="inline">
-                                                    <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
-                                                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Areas
-                                                    </button>
-                                                </form>
-                                            <?php else: ?>
-                                                <div class="bg-slate-50 rounded-md p-3 text-sm text-slate-600">
-                                                    <i class="fa-solid fa-info-circle mr-1 text-slate-400"></i>
-                                                    No areas detected yet. Run analysis to discover areas automatically.
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
+                                <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/update" class="label-mapping-section__form">
+                                    <div>
+                                        <label class="label-mapping-section__field-title">Bug Label</label>
+                                        <p class="label-mapping-section__field-description">Which label indicates an issue is a bug?</p>
+                                        <input type="text" name="bug_label" value="<?php echo htmlspecialchars($glob['selected_repo']['bug_label']); ?>" class="settings-form-field__input" placeholder="bug">
+                                        <p class="settings-form-field__help">Examples: bug, type: bug, defect</p>
                                     </div>
 
-                                    <div class="pt-4 flex justify-end">
-                                        <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-emerald-700">Save Changes</button>
+                                    <div>
+                                        <label class="label-mapping-section__field-title">Priority Labels</label>
+                                        <p class="label-mapping-section__field-description">Enter labels used to denote priority levels, one per line.</p>
+
+                                        <?php
+                                        $priorityLabelsText = '';
+                                        if (!empty($glob['selected_repo']['priority_labels'])) {
+                                            $priorityLabels = json_decode($glob['selected_repo']['priority_labels'], true);
+                                            if (is_array($priorityLabels)) {
+                                                $priorityLabelsText = implode("\n", $priorityLabels);
+                                            }
+                                        }
+                                        ?>
+
+                                        <textarea name="priority_labels_text" rows="4" class="settings-form-field__textarea" placeholder="priority: high&#10;priority: medium&#10;priority: low"><?php echo htmlspecialchars($priorityLabelsText); ?></textarea>
+                                        <p class="settings-form-field__help">Leave blank if this repository doesn't use priority labels.</p>
+                                    </div>
+
+                                    <!-- Areas Section -->
+                                    <div class="areas-section">
+                                        <label class="areas-section__title">Functional Areas</label>
+                                        <p class="areas-section__description">Areas are auto-detected on first analysis using AI. They help categorize issues by codebase section.</p>
+
+                                        <?php if (!empty($glob['areas'])): ?>
+                                            <div class="areas-section__list">
+                                                <ul>
+                                                    <?php foreach ($glob['areas'] as $area): ?>
+                                                        <li>
+                                                            <i class="fa-solid fa-circle areas-section__list-icon"></i>
+                                                            <?php echo htmlspecialchars($area['name']); ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            </div>
+                                            <form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" class="inline">
+                                                <button type="submit" class="areas-section__reset-btn" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
+                                                    <i class="fa-solid fa-rotate-left"></i> Reset Areas
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <div class="areas-section__empty">
+                                                <i class="fa-solid fa-info-circle"></i>
+                                                No areas detected yet. Run analysis to discover areas automatically.
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="label-mapping-section__footer">
+                                        <button type="submit" class="label-mapping-section__save-btn">Save Changes</button>
                                     </div>
                                 </form>
                             </div>
