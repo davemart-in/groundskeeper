@@ -371,7 +371,11 @@
                             <span class="modal__selected-count" id="selected-count-duplicates">0 selected</span>
                         </div>
                         <div class="modal__toolbar-right">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('duplicates')" class="modal__action-btn">
+                            <button onclick="GRNDSKPR.Dashboard.openSelectedIssueUrls('duplicates')" class="modal__action-btn modal__action-btn--secondary">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                Open in Tabs
+                            </button>
+                            <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('duplicates')" class="modal__action-btn">
                                 <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
@@ -434,7 +438,11 @@
                             <span class="modal__selected-count" id="selected-count-high-signal">0 selected</span>
                         </div>
                         <div class="modal__toolbar-right">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('high-signal')" class="modal__action-btn">
+                            <button onclick="GRNDSKPR.Dashboard.openSelectedIssueUrls('high-signal')" class="modal__action-btn modal__action-btn--secondary">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                Open in Tabs
+                            </button>
+                            <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('high-signal')" class="modal__action-btn">
                                 <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
@@ -495,7 +503,11 @@
                             <span class="modal__selected-count" id="selected-count-cleanup">0 selected</span>
                         </div>
                         <div class="modal__toolbar-right">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('cleanup')" class="modal__action-btn">
+                            <button onclick="GRNDSKPR.Dashboard.openSelectedIssueUrls('cleanup')" class="modal__action-btn modal__action-btn--secondary">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                Open in Tabs
+                            </button>
+                            <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('cleanup')" class="modal__action-btn">
                                 <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
@@ -556,7 +568,11 @@
                             <span class="modal__selected-count" id="selected-count-missing-info">0 selected</span>
                         </div>
                         <div class="modal__toolbar-right">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('missing-info')" class="modal__action-btn">
+                            <button onclick="GRNDSKPR.Dashboard.openSelectedIssueUrls('missing-info')" class="modal__action-btn modal__action-btn--secondary">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                Open in Tabs
+                            </button>
+                            <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('missing-info')" class="modal__action-btn">
                                 <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
@@ -617,7 +633,11 @@
                             <span class="modal__selected-count" id="selected-count-suggestions">0 selected</span>
                         </div>
                         <div class="modal__toolbar-right">
-                             <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('suggestions')" class="modal__action-btn">
+                            <button onclick="GRNDSKPR.Dashboard.openSelectedIssueUrls('suggestions')" class="modal__action-btn modal__action-btn--secondary">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                Open in Tabs
+                            </button>
+                            <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('suggestions')" class="modal__action-btn">
                                 <i class="fa-solid fa-copy"></i>
                                 Copy Issue URLs
                             </button>
@@ -643,6 +663,37 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL: Popup Blocker Instructions -->
+    <div id="modal-popup-blocker" class="modal hidden" aria-labelledby="popup-blocker-title" role="dialog" aria-modal="true">
+        <div class="modal__backdrop"></div>
+        <div class="modal__wrapper" onclick="GRNDSKPR.Dashboard.closePopupBlockerModal()">
+            <div class="modal__container">
+                <div class="modal__panel" onclick="event.stopPropagation()" style="max-width: 32rem;">
+                    <div class="modal__header">
+                        <div class="modal__header-content">
+                            <h3 class="modal__title" id="popup-blocker-title">Allow Pop-ups to Open Multiple Tabs</h3>
+                            <p class="modal__description">Your browser blocks multiple tabs from opening at once. To use this feature, you'll need to allow pop-ups for this site.</p>
+                        </div>
+                        <button type="button" onclick="GRNDSKPR.Dashboard.closePopupBlockerModal()" class="modal__close-btn">
+                            <span class="sr-only">Close</span>
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="modal__form-content">
+                        <p style="font-size: 0.875rem; color: #475569; margin-bottom: 1rem;">When you click "Open in Tabs", look for the pop-up blocked icon in your browser's address bar and select "Always allow pop-ups":</p>
+                        <img src="<?php echo BASEURL; ?>img/popup-blocker.png" alt="Browser popup blocker settings" style="width: 100%; border-radius: 0.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                            <button type="button" onclick="GRNDSKPR.Dashboard.closePopupBlockerModal(true)" class="modal__action-btn">
+                                Got it, continue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-utility.js"></script>
     <script>
         // Initialize dashboard configuration

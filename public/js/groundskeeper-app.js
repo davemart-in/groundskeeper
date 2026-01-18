@@ -414,6 +414,104 @@ window.GRNDSKPR.Dashboard = (function() {
         });
     }
 
+    // Store pending modal ID for popup blocker flow
+    let pendingOpenTabsModalId = null;
+
+    /**
+     * Open selected issue URLs in new tabs
+     */
+    function openSelectedIssueUrls(modalId) {
+        // Check if user has seen the popup blocker instructions
+        const hasSeenPopupInstructions = localStorage.getItem('grndskpr_popup_instructions_seen');
+        
+        if (!hasSeenPopupInstructions) {
+            // Store the modal ID and show instructions first
+            pendingOpenTabsModalId = modalId;
+            showPopupBlockerModal();
+            return;
+        }
+
+        // Proceed with opening tabs
+        doOpenSelectedIssueUrls(modalId);
+    }
+
+    /**
+     * Actually open the selected issue URLs (after instructions shown)
+     */
+    function doOpenSelectedIssueUrls(modalId) {
+        // Get all checked checkboxes in this modal
+        const modal = document.getElementById(`modal-${modalId}`);
+        const checkboxes = modal.querySelectorAll('tbody input[type="checkbox"]:checked');
+
+        if (checkboxes.length === 0) {
+            showToast('Please select at least one issue to open', true);
+            return;
+        }
+
+        // Extract URLs from the table rows
+        const urls = [];
+        checkboxes.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            const link = row.querySelector('a[href*="github.com"]');
+            if (link) {
+                urls.push(link.href);
+            }
+        });
+
+        if (urls.length === 0) {
+            showToast('No URLs found for selected issues', true);
+            return;
+        }
+
+        // Open each URL in a new tab, tracking blocked popups
+        let opened = 0;
+        let blocked = 0;
+        urls.forEach(url => {
+            const newWindow = window.open(url, '_blank');
+            if (newWindow === null || typeof newWindow === 'undefined') {
+                blocked++;
+            } else {
+                opened++;
+            }
+        });
+
+        // Show appropriate message
+        if (blocked > 0 && opened === 0) {
+            showToast('Popups blocked. Please allow popups for this site.', true);
+        } else if (blocked > 0) {
+            showToast(`Opened ${opened} tab${opened > 1 ? 's' : ''}, ${blocked} blocked. Allow popups for all tabs.`, true);
+        } else {
+            showToast(`Opened ${opened} issue${opened > 1 ? 's' : ''} in new tabs`);
+        }
+    }
+
+    /**
+     * Show the popup blocker instructions modal
+     */
+    function showPopupBlockerModal() {
+        const modal = document.getElementById('modal-popup-blocker');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    /**
+     * Close the popup blocker instructions modal
+     */
+    function closePopupBlockerModal(proceed = false) {
+        const modal = document.getElementById('modal-popup-blocker');
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+
+        // Mark as seen
+        localStorage.setItem('grndskpr_popup_instructions_seen', 'true');
+
+        // If user clicked "Got it, continue", proceed with opening tabs
+        if (proceed && pendingOpenTabsModalId) {
+            doOpenSelectedIssueUrls(pendingOpenTabsModalId);
+            pendingOpenTabsModalId = null;
+        }
+    }
+
     /**
      * Toggle visibility of area list
      */
@@ -570,6 +668,8 @@ window.GRNDSKPR.Dashboard = (function() {
         toggleSelectAll: toggleSelectAll,
         updateSelectedCount: updateSelectedCount,
         copySelectedIssueUrls: copySelectedIssueUrls,
+        openSelectedIssueUrls: openSelectedIssueUrls,
+        closePopupBlockerModal: closePopupBlockerModal,
         toggleAreas: toggleAreas,
         filterDashboard: filterDashboard,
         resetDashboard: resetDashboard,
