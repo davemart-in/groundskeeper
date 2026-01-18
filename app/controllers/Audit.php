@@ -29,7 +29,7 @@ if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] =
 
     try {
         // Initialize GitHub API
-        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $githubToken = $user ? $user->getDecryptedToken() : null;
         $github = new GitHubAPI($githubToken);
 
         // Fetch issues from GitHub with bug label filter

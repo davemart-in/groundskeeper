@@ -92,7 +92,7 @@ if ($segment1 === 'process-sync' && is_numeric($segment2) && $_SERVER['REQUEST_M
         $repo = $repoModel->findById($job['repository_id']);
 
         // Initialize GitHub API
-        $githubToken = $user?->github_access_token ?: null;
+        $githubToken = $user ? $user->getDecryptedToken() : null;
         $github = new GitHubAPI($githubToken);
 
         // Fetch issues from GitHub with bug label filter

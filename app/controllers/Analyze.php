@@ -103,19 +103,20 @@ if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] =
 
 // Route: /analyze/approve-areas (approve discovered areas)
 if ($segment1 === 'approve-areas' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+
     if (!isset($_SESSION['pending_areas'])) {
-        $_SESSION['error'] = 'No pending areas to approve.';
-        redirect('');
+        echo json_encode(['success' => false, 'error' => 'No pending areas to approve']);
         exit;
     }
 
     $pendingData = $_SESSION['pending_areas'];
     $repoId = $pendingData['repo_id'];
+    $jobId = $pendingData['job_id'] ?? null;
     $areasText = $_POST['areas'] ?? '';
 
     if (empty($areasText)) {
-        $_SESSION['error'] = 'No areas provided.';
-        redirect('');
+        echo json_encode(['success' => false, 'error' => 'No areas provided']);
         exit;
     }
 
@@ -124,8 +125,7 @@ if ($segment1 === 'approve-areas' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $areas = array_filter(array_map('trim', $lines));
 
     if (empty($areas)) {
-        $_SESSION['error'] = 'No valid areas provided.';
-        redirect('');
+        echo json_encode(['success' => false, 'error' => 'No valid areas provided']);
         exit;
     }
 
@@ -137,8 +137,12 @@ if ($segment1 === 'approve-areas' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     unset($_SESSION['pending_areas']);
-    $_SESSION['success'] = 'Areas saved! Re-run analysis to categorize issues.';
-    redirect('');
+
+    echo json_encode([
+        'success' => true,
+        'job_id' => $jobId,
+        'area_count' => count($areas)
+    ]);
     exit;
 }
 

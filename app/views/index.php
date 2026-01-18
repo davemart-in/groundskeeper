@@ -749,7 +749,7 @@
 
     <!-- Area Approval Modal -->
     <?php if (isset($glob['pending_areas']) && !empty($glob['pending_areas'])): ?>
-    <div class="area-approval-modal">
+    <div id="area-approval-modal" class="area-approval-modal">
         <div class="area-approval-modal__content">
             <h3 class="area-approval-modal__title">
                 <i class="fa-solid fa-sparkles"></i>
@@ -760,8 +760,9 @@
                 You can edit, add, or remove areas before saving (one per line).
             </p>
 
-            <form method="POST" action="<?php echo BASEURL; ?>analyze/approve-areas">
+            <form id="area-approval-form" method="POST" action="<?php echo BASEURL; ?>analyze/approve-areas">
                 <textarea
+                    id="area-approval-textarea"
                     name="areas"
                     rows="12"
                     class="area-approval-modal__textarea"
@@ -780,6 +781,10 @@
             </form>
         </div>
     </div>
+    <script>
+        // Store job ID from pending areas for continuation
+        window.PENDING_JOB_ID = <?php echo $glob['pending_areas']['job_id'] ?? 'null'; ?>;
+    </script>
     <?php endif; ?>
 
     <!-- Resume/Restart Analysis Modal -->
@@ -881,6 +886,55 @@
         e.preventDefault();
         startSync(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
     });
+
+    // Area approval form submission - saves areas then continues analysis
+    document.getElementById('area-approval-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        approveAreasAndContinue();
+    });
+
+    function approveAreasAndContinue() {
+        const areasText = document.getElementById('area-approval-textarea').value;
+        
+        fetch(BASEURL + 'analyze/approve-areas', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'areas=' + encodeURIComponent(areasText)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                alert('Failed to save areas: ' + (data.error || 'Unknown error'));
+                return;
+            }
+
+            // Hide area approval modal
+            document.getElementById('area-approval-modal').classList.add('hidden');
+
+            // Continue with analysis if we have a job ID
+            if (data.job_id) {
+                currentJobId = data.job_id;
+                currentStep = 'analyze';
+                showProgressModal();
+                
+                // Mark sync and areas as complete
+                setStepIcon('sync', 'complete', 'check');
+                setStepLine(1, true);
+                setStepIcon('areas', 'complete', 'check');
+                setStepLine(2, true);
+                
+                // Start analysis
+                processAnalyzeChunk();
+            } else {
+                // No job ID, just reload
+                window.location.reload();
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Failed to save areas');
+        });
+    }
 
     function runAuditThenSync(repoId) {
         // Show progress modal immediately
