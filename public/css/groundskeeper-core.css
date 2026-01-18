@@ -160,6 +160,8 @@ body.font-size-large #terminal-text {
 	align-items: center;
 	gap: 0.5rem;
 	margin-right: 2rem;
+	text-decoration: none;
+	cursor: pointer;
 }
 
 .top-nav__logo-icon {

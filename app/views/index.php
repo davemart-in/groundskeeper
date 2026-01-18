@@ -18,12 +18,12 @@
         <div class="top-nav__container">
             <div class="top-nav__inner">
                 <div class="top-nav__left">
-                    <div class="top-nav__logo">
+                    <a href="<?php echo BASEURL; ?>" class="top-nav__logo">
                         <div class="top-nav__logo-icon">
                             <i class="fa-solid fa-leaf"></i>
                         </div>
                         <span class="top-nav__logo-text">Groundskeeper <span class="top-nav__logo-badge">v0.1</span></span>
-                    </div>
+                    </a>
                     <div class="top-nav__tabs">
                         <a href="<?php echo BASEURL; ?>" id="tab-dashboard" class="top-nav__tab <?php echo (!isset($glob['active_tab']) || $glob['active_tab'] === 'dashboard') ? 'top-nav__tab--active' : ''; ?>">
                             Dashboard

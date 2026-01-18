@@ -422,7 +422,7 @@ window.GRNDSKPR.Dashboard = (function() {
         // Update Header
         const header = document.getElementById('analysis-header');
         header.innerHTML = `
-            <button onclick="GRNDSKPR.Dashboard.resetDashboard()" class="text-slate-400 hover:text-emerald-600 transition mr-2">
+            <button onclick="GRNDSKPR.Dashboard.resetDashboard()" class="findings-header__back-btn">
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
             <h3 class="text-lg font-bold text-slate-900">Analysis Findings</h3>
