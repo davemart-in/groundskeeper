@@ -297,15 +297,64 @@ class Issue {
     }
 
     /**
-     * Count high signal issues for a repository
+     * Count high signal issues for a repository (filtered by priority score >= 50)
      *
      * @param int $repositoryId Repository ID
      * @return int Count
      */
     public function countHighSignal($repositoryId) {
-        $sql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_high_signal = 1";
-        $result = $this->db->fetch($sql, [$repositoryId]);
-        return $result['count'] ?? 0;
+        $issues = $this->findHighSignal($repositoryId);
+        $count = 0;
+        
+        foreach ($issues as $issue) {
+            $score = $this->calculatePriorityScore($issue);
+            if ($score >= 50) {
+                $count++;
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Calculate priority score for an issue
+     *
+     * @param array $issue Issue data
+     * @return int Priority score (0-100)
+     */
+    public function calculatePriorityScore($issue) {
+        $score = 0;
+
+        // Factor 1: Community engagement (max 40 points)
+        $engagement = ($issue['reactions_total'] ?? 0) + ($issue['comments_count'] ?? 0);
+        $score += min(40, $engagement * 2);
+
+        // Factor 2: Age (newer issues get more points, max 25 points)
+        $age = time() - ($issue['created_at'] ?? time());
+        $daysOld = $age / 86400;
+        if ($daysOld < 7) {
+            $score += 25;
+        } elseif ($daysOld < 30) {
+            $score += 20;
+        } elseif ($daysOld < 90) {
+            $score += 15;
+        } elseif ($daysOld < 180) {
+            $score += 10;
+        } else {
+            $score += 5;
+        }
+
+        // Factor 3: Has assignee (max 15 points)
+        if (!empty($issue['assignees'])) {
+            $score += 15;
+        }
+
+        // Factor 4: Has milestone (max 10 points)
+        if (!empty($issue['milestone'])) {
+            $score += 10;
+        }
+
+        return $score;
     }
 
     /**
