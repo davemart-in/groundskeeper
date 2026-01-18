@@ -16,57 +16,64 @@ $segment2 = $glob['route'][2] ?? '';
 if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $repoId = (int)$segment2;
 
+    // Return JSON for AJAX requests
+    header('Content-Type: application/json');
+
     // Load repository
     $repo = $repoModel->findById($repoId);
 
     if (!$repo) {
-        $_SESSION['error'] = 'Repository not found.';
-        redirect('');
+        echo json_encode(['success' => false, 'error' => 'Repository not found']);
         exit;
     }
 
-    // Initialize GitHub API
-    $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
-    $github = new GitHubAPI($githubToken);
+    try {
+        // Initialize GitHub API
+        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $github = new GitHubAPI($githubToken);
 
-    // Fetch issues from GitHub with bug label filter
-    $filters = [
-        'state' => 'open',
-        'labels' => $repo['bug_label']
-    ];
+        // Fetch issues from GitHub with bug label filter
+        $filters = [
+            'state' => 'open',
+            'labels' => $repo['bug_label']
+        ];
 
-    $githubIssues = $github->getIssues($repo['owner'], $repo['name'], $filters);
+        $githubIssues = $github->getIssues($repo['owner'], $repo['name'], $filters);
 
-    if ($githubIssues === false) {
-        $_SESSION['error'] = 'Failed to fetch issues from GitHub. Please check your repository settings and try again.';
-        redirect('');
-        exit;
-    }
-
-    // Clear existing issues for this repository
-    $issueModel->deleteByRepository($repoId);
-
-    // Store issues locally
-    $issueCount = 0;
-    foreach ($githubIssues as $githubIssue) {
-        if ($issueModel->create($repoId, $githubIssue)) {
-            $issueCount++;
+        if ($githubIssues === false) {
+            echo json_encode(['success' => false, 'error' => 'Failed to fetch issues from GitHub']);
+            exit;
         }
+
+        // Clear existing issues for this repository
+        $issueModel->deleteByRepository($repoId);
+
+        // Store issues locally
+        $issueCount = 0;
+        foreach ($githubIssues as $githubIssue) {
+            if ($issueModel->create($repoId, $githubIssue)) {
+                $issueCount++;
+            }
+        }
+
+        // Update last_audited_at timestamp
+        $repoModel->update($repoId, [
+            'last_audited_at' => time()
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'issue_count' => $issueCount,
+            'repo_name' => $repo['full_name']
+        ]);
+    } catch (Exception $e) {
+        error_log('Audit error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
-
-    // Update last_audited_at timestamp
-    $repoModel->update($repoId, [
-        'last_audited_at' => time()
-    ]);
-
-    // Set success message
-    $_SESSION['success'] = "Audit complete! Imported {$issueCount} issue" . ($issueCount !== 1 ? 's' : '') . " from {$repo['full_name']}.";
-
-    // Redirect back to dashboard
-    redirect('');
     exit;
 }
 
 // If we get here, invalid route
-redirect('');
+header('Content-Type: application/json');
+echo json_encode(['success' => false, 'error' => 'Invalid route']);
 exit;

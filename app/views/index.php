@@ -66,7 +66,7 @@
                         <div class="dashboard-controls__status-info">
                             <span class="dashboard-controls__status-indicator" style="background: #cbd5e1;"></span>
                             Not yet audited
-                            <form method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form" onsubmit="showAuditLoading()">
+                            <form id="audit-form" method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form">
                                 <button type="submit" class="dashboard-controls__sync-btn" style="color: #059669; border-color: #a7f3d0; background: #d1fae5;"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
                             </form>
                         </div>
@@ -870,11 +870,49 @@
     let currentJobId = null;
     let currentStep = 'sync'; // sync, areas, analyze
 
+    // Audit form submission - runs audit then triggers sync/analyze
+    document.getElementById('audit-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        runAuditThenSync(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
+    });
+
     // Sync form submission
     document.getElementById('sync-form')?.addEventListener('submit', function(e) {
         e.preventDefault();
         startSync(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
     });
+
+    function runAuditThenSync(repoId) {
+        // Show progress modal immediately
+        showProgressModal();
+        document.getElementById('progress-text').textContent = 'Fetching issues from GitHub...';
+        document.getElementById('progress-percent').textContent = '10%';
+        document.getElementById('progress-bar').style.width = '10%';
+        document.getElementById('progress-details').textContent = 'Running initial audit...';
+
+        fetch(BASEURL + 'audit/run/' + repoId, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showError(data.error || 'Audit failed');
+                return;
+            }
+
+            // Audit complete, now start the sync/analyze flow
+            document.getElementById('progress-details').textContent = 
+                `Imported ${data.issue_count} issues. Starting analysis...`;
+            
+            // Chain to startSync
+            startSync(repoId);
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showError('Failed to run audit');
+        });
+    }
 
     function startSync(repoId) {
         fetch(BASEURL + 'sync/run/' + repoId, {
