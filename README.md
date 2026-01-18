@@ -1,5 +1,7 @@
 # Groundskeeper
 
+<img width="2934" height="1679" alt="image" src="https://github.com/user-attachments/assets/820e3949-d104-4f1f-9641-a421259766b3" />
+
 **AI-powered GitHub issue triage tool** that helps teams manage large bug backlogs by automatically identifying high-priority issues, duplicates, cleanup candidates, and more.
 
 ## What It Does
