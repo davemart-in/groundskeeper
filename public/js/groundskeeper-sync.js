@@ -364,13 +364,15 @@ window.GRNDSKPR.Sync = (function() {
         if (detailsEl) detailsEl.textContent = `${processed} of ${total} issues analyzed`;
 
         // Update estimated time remaining
+        // Formula: (remaining issues / 5 per batch) * 15 seconds per batch / 60 seconds
         if (descEl && total > 0) {
             const remaining = total - processed;
-            const minutesRemaining = Math.ceil((remaining * 15) / 60);
+            const batchesRemaining = Math.ceil(remaining / 5);
+            const minutesRemaining = Math.ceil((batchesRemaining * 15) / 60);
             if (minutesRemaining <= 1) {
-                descEl.textContent = 'Estimated time: about 1 minute';
+                descEl.textContent = 'Estimated time remaining: about 1 minute';
             } else {
-                descEl.textContent = `Estimated time: about ${minutesRemaining} minutes`;
+                descEl.textContent = `Estimated time remaining: about ${minutesRemaining} minutes`;
             }
         }
     }
