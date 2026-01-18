@@ -89,7 +89,7 @@ That's it! No additional dependencies needed.
 ### First Time Setup
 
 1. **Add Repository** - Go to Settings and add your first repository (format: `owner/repo`)
-2. **Run Initial Audit** - Click "Run Audit" to import all open bug issues
+2. **Run Initial Audit** - Click "Run Audit" button on the dashboard to import all open bug issues
 3. **Approve Areas** - Review and approve AI-discovered functional areas
 4. **Analysis Complete** - View your dashboard with categorized insights
 
@@ -102,13 +102,6 @@ That's it! No additional dependencies needed.
    - Use bulk actions to copy URLs or open multiple issues in tabs
    - Filter by functional area to focus on specific parts of your codebase
 
-### Dashboard Features
-
-- **Total Issues** - Count of all open bugs synced from GitHub
-- **Issue Cards** - Click to view detailed lists with AI analysis
-- **Area Filtering** - Click any area in the right sidebar to filter all results
-- **Bulk Actions** - Select multiple issues and copy URLs or open in browser tabs
-- **Direct Links** - Every issue links back to GitHub for quick access
 
 ## How It Works
 
@@ -123,14 +116,6 @@ That's it! No additional dependencies needed.
 4. **Duplicate Detection** - Uses OpenAI text-embedding-3-small to find semantically similar issues
 5. **Results** - Stores analysis per repository for fast dashboard loading
 
-## Multi-Repository Support
-
-Groundskeeper supports multiple repositories:
-- Each repository maintains separate analysis results
-- Switch between repos using the dropdown selector
-- Bookmark specific repos with `?repo={id}` URL parameter
-- Selection persists across sessions
-
 ## Technology Stack
 
 - **Backend**: PHP 8 with custom lightweight framework (zero dependencies!)
@@ -138,7 +123,7 @@ Groundskeeper supports multiple repositories:
 - **AI**: OpenAI only
   - GPT-4o-mini for area discovery and issue analysis
   - text-embedding-3-small for duplicate detection
-- **Frontend**: Vanilla JavaScript, Tailwind-inspired CSS
+- **Frontend**: HTML, Vanilla JavaScript, CSS
 
 ## License
 
