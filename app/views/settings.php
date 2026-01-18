@@ -135,7 +135,7 @@
 					<div class="label-mapping-section">
 						<h3 class="label-mapping-section__title">Label Mapping</h3>
 
-						<form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/update" class="label-mapping-section__form">
+						<form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/update" class="label-mapping-section__form" id="label-mapping-form">
 							<div>
 								<label class="label-mapping-section__field-title">Bug Label</label>
 								<p class="label-mapping-section__field-description">Which label indicates an issue is a bug?</p>
@@ -185,17 +185,18 @@
 								<?php endif; ?>
 							</div>
 
-							<div class="label-mapping-section__footer">
-								<?php if (!empty($glob['areas'])): ?>
-									<form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" style="display: inline;">
-										<button type="submit" class="areas-section__reset-btn" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
-											<i class="fa-solid fa-rotate-left"></i> Reset Areas
-										</button>
-									</form>
-								<?php endif; ?>
-								<button type="submit" class="label-mapping-section__save-btn">Save Changes</button>
-							</div>
 						</form>
+
+						<div class="label-mapping-section__footer">
+							<?php if (!empty($glob['areas'])): ?>
+							<form method="POST" action="<?php echo BASEURL; ?>settings/<?php echo $glob['selected_repo']['id']; ?>/reset-areas" class="label-mapping-section__reset-form">
+								<button type="submit" class="areas-section__reset-btn" onclick="return confirm('Are you sure you want to reset areas? This will clear all area categorizations and re-discover areas on next analysis.')">
+									<i class="fa-solid fa-rotate-left"></i> Reset Areas
+								</button>
+							</form>
+							<?php endif; ?>
+							<button type="submit" form="label-mapping-form" class="label-mapping-section__save-btn">Save Changes</button>
+						</div>
 					</div>
 					<?php endif; ?>
 				</div>

@@ -131,6 +131,17 @@ class Issue {
     }
 
     /**
+     * Clear area_id from all issues in a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return bool Success
+     */
+    public function clearAreaIds($repositoryId) {
+        $sql = "UPDATE issues SET area_id = NULL WHERE repository_id = ?";
+        return $this->db->execute($sql, [$repositoryId]);
+    }
+
+    /**
      * Convert database row to array
      *
      * @param array $row Database row
@@ -354,7 +365,20 @@ class Issue {
             $score += 10;
         }
 
-        return $score;
+        // Factor 5: Label signals (max 10 points)
+        $priorityLabels = ['critical', 'urgent', 'high priority', 'p0', 'p1', 'blocker', 'security'];
+        $labels = $issue['labels'] ?? [];
+        foreach ($labels as $label) {
+            $labelLower = strtolower($label);
+            foreach ($priorityLabels as $priorityLabel) {
+                if (strpos($labelLower, $priorityLabel) !== false) {
+                    $score += 10;
+                    break 2;
+                }
+            }
+        }
+
+        return min(100, $score);
     }
 
     /**

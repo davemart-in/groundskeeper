@@ -552,10 +552,16 @@
 }
 
 .label-mapping-section__footer {
+	margin-top: 1.5rem;
 	padding-top: 1rem;
+	border-top: 1px solid #e2e8f0;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+}
+
+.label-mapping-section__reset-form {
+	display: inline;
 }
 
 .label-mapping-section__save-btn {

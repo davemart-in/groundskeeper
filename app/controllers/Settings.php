@@ -254,7 +254,20 @@ if (is_numeric($segment1) && $segment2 === 'reset-areas' && $_SERVER['REQUEST_ME
 
     try {
         $areaModel = new Area();
+        $issueModel = new Issue();
+        
+        // Clear area_id from all issues first
+        $issueModel->clearAreaIds($repoId);
+        
+        // Then delete the areas
         $areaModel->deleteByRepository($repoId);
+        
+        // Clear any pending areas from session
+        unset($_SESSION['pending_areas']);
+        
+        // Also clear analysis results which may contain cached area data
+        unset($_SESSION['analysis_results']);
+        
         $_SESSION['success'] = 'Areas reset! Run analysis again to discover new areas.';
     } catch (Exception $e) {
         error_log('Reset areas error: ' . $e->getMessage());

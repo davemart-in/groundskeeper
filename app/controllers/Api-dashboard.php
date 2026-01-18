@@ -109,7 +109,7 @@ function handleHighSignal() {
 	// Calculate priority scores and filter
 	$issues = [];
 	foreach ($rows as $issue) {
-		$score = calculatePriorityScore($issue);
+		$score = $issueModel->calculatePriorityScore($issue);
 		$issue['priority_score'] = $score;
 
 		// Only include issues with score >= 50
@@ -127,60 +127,6 @@ function handleHighSignal() {
 		'success' => true,
 		'data' => $issues
 	]);
-}
-
-/**
- * Calculate priority score for an issue
- *
- * @param array $issue Issue data
- * @return int Priority score (0-100)
- */
-function calculatePriorityScore($issue) {
-	$score = 0;
-
-	// Factor 1: Community engagement (max 40 points)
-	$engagement = ($issue['reactions_total'] ?? 0) + ($issue['comments_count'] ?? 0);
-	$score += min(40, $engagement * 2);
-
-	// Factor 2: Age (newer issues get more points, max 25 points)
-	$age = time() - $issue['created_at'];
-	$daysOld = $age / 86400;
-	if ($daysOld < 7) {
-		$score += 25;
-	} elseif ($daysOld < 30) {
-		$score += 20;
-	} elseif ($daysOld < 90) {
-		$score += 15;
-	} elseif ($daysOld < 180) {
-		$score += 10;
-	} else {
-		$score += 5;
-	}
-
-	// Factor 3: Has assignee (max 15 points)
-	if (!empty($issue['assignees'])) {
-		$score += 15;
-	}
-
-	// Factor 4: Has milestone (max 10 points)
-	if (!empty($issue['milestone'])) {
-		$score += 10;
-	}
-
-	// Factor 5: Label signals (max 10 points)
-	$priorityLabels = ['critical', 'urgent', 'high priority', 'p0', 'p1', 'blocker', 'security'];
-	$labels = $issue['labels'] ?? [];
-	foreach ($labels as $label) {
-		$labelLower = strtolower($label);
-		foreach ($priorityLabels as $priorityLabel) {
-			if (strpos($labelLower, $priorityLabel) !== false) {
-				$score += 10;
-				break 2;
-			}
-		}
-	}
-
-	return min(100, $score);
 }
 
 /**
