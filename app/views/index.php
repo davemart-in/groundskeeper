@@ -822,7 +822,7 @@
                 <span id="progress-title">Syncing & Analyzing</span>
             </h3>
             <p id="progress-description" class="progress-modal__description">
-                Calculating estimated time...
+                Processing repository changes. This may take a while...
             </p>
 
             <!-- Step Indicators -->
@@ -1068,16 +1068,6 @@
 
             document.getElementById('progress-details').textContent =
                 `Synced ${stats.total} open issues: ${parts.join(', ')}`;
-
-            // Show initial time estimate
-            const totalIssues = stats.total;
-            const batches = Math.ceil(totalIssues / 5);
-            const estimatedMinutes = Math.ceil((batches * 20) / 60);
-            if (estimatedMinutes <= 1) {
-                document.getElementById('progress-description').textContent = 'Estimated time: about 1 minute';
-            } else {
-                document.getElementById('progress-description').textContent = `Estimated time: about ${estimatedMinutes} minutes`;
-            }
 
             // Move to area check step
             currentStep = 'areas';
