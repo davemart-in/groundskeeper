@@ -644,7 +644,6 @@
         </div>
     </div>
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-utility.js"></script>
-	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-core.js"></script>
     <script>
         // Initialize dashboard configuration
         window.GRNDSKPR_CONFIG = {
@@ -673,7 +672,7 @@
             <?php endif; ?>
         });
     </script>
-    <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-dashboard.js"></script>
+    <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-app.js"></script>
 
     <!-- Toast Notification -->
     <div id="toast" class="alert"></div>
