@@ -62,7 +62,7 @@ That's it! No additional dependencies needed.
    - Create a token at https://github.com/settings/tokens
    - Required scopes: `public_repo` (for public repos only)
 
-   Edit `app/config/.env` with your credentials:
+   Create `app/config/.env` with your credentials:
    ```
    GITHUB_PERSONAL_ACCESS_TOKEN=your_github_personal_access_token
    OPENAI_API_KEY=your_openai_api_key
