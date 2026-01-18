@@ -106,3 +106,11 @@ CREATE TABLE IF NOT EXISTS analysis_results (
 );
 
 CREATE INDEX IF NOT EXISTS idx_analysis_results_repository ON analysis_results(repository_id);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id TEXT PRIMARY KEY,
+    session_data TEXT NOT NULL,
+    last_activity INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_last_activity ON sessions(last_activity);

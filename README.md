@@ -15,13 +15,12 @@ Groundskeeper syncs your GitHub repository's bug issues and uses AI to analyze t
 
 ## Requirements
 
-- PHP 8.0+
-- SQLite
-- Redis (for sessions)
-- Composer
+- PHP 8.0+ (with SQLite support - usually enabled by default)
 - GitHub OAuth App credentials
 - Claude API key (Anthropic)
 - OpenAI API key
+
+That's it! No additional dependencies needed.
 
 ## Installation
 
@@ -31,12 +30,7 @@ Groundskeeper syncs your GitHub repository's bug issues and uses AI to analyze t
    cd groundskeeper
    ```
 
-2. **Install dependencies**
-   ```bash
-   composer install
-   ```
-
-3. **Configure environment variables**
+2. **Configure environment variables**
 
    Edit `app/config/.env` with your credentials:
    ```
@@ -52,12 +46,12 @@ Groundskeeper syncs your GitHub repository's bug issues and uses AI to analyze t
    - Set Authorization callback URL to: `http://your-domain/oauth/callback`
    - Copy the Client ID and Client Secret to your `.env` file
 
-4. **Start Redis**
+   **Generate Encryption Key:**
    ```bash
-   redis-server
+   php -r "echo base64_encode(random_bytes(32));"
    ```
 
-5. **Run the application**
+3. **Run the application**
 
    Using PHP's built-in server:
    ```bash
@@ -67,9 +61,11 @@ Groundskeeper syncs your GitHub repository's bug issues and uses AI to analyze t
 
    Or configure with your preferred web server (Apache/Nginx).
 
-6. **Access the application**
+4. **Access the application**
 
    Navigate to `http://localhost:8000` in your browser.
+
+   The database and sessions table will be created automatically on first run.
 
 ## Usage
 
@@ -121,9 +117,8 @@ Groundskeeper supports multiple repositories:
 
 ## Technology Stack
 
-- **Backend**: PHP 8 with custom lightweight framework
-- **Database**: SQLite
-- **Sessions**: Redis
+- **Backend**: PHP 8 with custom lightweight framework (zero dependencies!)
+- **Database**: SQLite (for data and sessions)
 - **AI Models**:
   - Claude (Anthropic) for area discovery
   - GPT-4o-mini (OpenAI) for issue analysis

@@ -19,10 +19,6 @@ set_error_handler('php_error_handler');
 // Catch fatal PHP errors
 register_shutdown_function('php_fatal_handler');
 
-/* LOAD COMPOSER LIBRARIES ------------------------------------------- */
-// Predis
-require_once(ROOTPATH.'vendor/autoload.php');
-
 /* ENV FILE CONVERSION ------------------------------------------- */
 require_once(COREPATH.'libraries/Env.php');
 env_init();
@@ -31,10 +27,8 @@ env_init();
 require_once(COREPATH.'Common.php');
 
 /* SESSIONS ------------------------------------------- */
-$redis = new Predis\Client();
-
 require_once(COREPATH.'libraries/Session.php');
-$handler = new RedisSession($redis);
+$handler = new SQLiteSession(Database::getInstance());
 session_set_save_handler($handler, true);
 
 /* SESSION ------------------------------------------- */

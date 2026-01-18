@@ -103,6 +103,15 @@ class Database {
         $this->pdo->exec($sql);
         $this->pdo->exec("CREATE INDEX IF NOT EXISTS idx_repository_id ON issues(repository_id)");
         $this->pdo->exec("CREATE INDEX IF NOT EXISTS idx_github_issue_id ON issues(github_issue_id)");
+
+        // Sessions table
+        $sql = "CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            session_data TEXT NOT NULL,
+            last_activity INTEGER NOT NULL
+        )";
+        $this->pdo->exec($sql);
+        $this->pdo->exec("CREATE INDEX IF NOT EXISTS idx_sessions_last_activity ON sessions(last_activity)");
     }
 
     /**
@@ -174,6 +183,15 @@ class Database {
     }
 
     /**
+     * Get PDO instance (for advanced operations like checking affected rows)
+     *
+     * @return PDO
+     */
+    public function getPDO() {
+        return $this->pdo;
+    }
+
+    /**
      * Begin transaction
      */
     public function beginTransaction() {
@@ -192,14 +210,5 @@ class Database {
      */
     public function rollback() {
         return $this->pdo->rollBack();
-    }
-
-    /**
-     * Get PDO instance for advanced operations
-     *
-     * @return PDO
-     */
-    public function getPDO() {
-        return $this->pdo;
     }
 }
