@@ -364,7 +364,7 @@
                     <div class="modal__toolbar">
                         <div class="modal__toolbar-left">
                             <label class="modal__select-all-label">
-                                <input type="checkbox" id="select-all-duplicates" onchange="toggleSelectAll('duplicates')" class="modal__select-all-checkbox">
+                                <input type="checkbox" id="select-all-duplicates" onchange="GRNDSKPR.Dashboard.toggleSelectAll('duplicates')" class="modal__select-all-checkbox">
                                 <span class="modal__select-all-text">Select All</span>
                             </label>
                             <span class="modal__toolbar-divider"></span>
@@ -427,7 +427,7 @@
                     <div class="modal__toolbar">
                         <div class="modal__toolbar-left">
                             <label class="modal__select-all-label">
-                                <input type="checkbox" id="select-all-high-signal" onchange="toggleSelectAll('high-signal')" class="modal__select-all-checkbox">
+                                <input type="checkbox" id="select-all-high-signal" onchange="GRNDSKPR.Dashboard.toggleSelectAll('high-signal')" class="modal__select-all-checkbox">
                                 <span class="modal__select-all-text">Select All</span>
                             </label>
                             <span class="modal__toolbar-divider"></span>
@@ -488,7 +488,7 @@
                     <div class="modal__toolbar">
                         <div class="modal__toolbar-left">
                             <label class="modal__select-all-label">
-                                <input type="checkbox" id="select-all-cleanup" onchange="toggleSelectAll('cleanup')" class="modal__select-all-checkbox">
+                                <input type="checkbox" id="select-all-cleanup" onchange="GRNDSKPR.Dashboard.toggleSelectAll('cleanup')" class="modal__select-all-checkbox">
                                 <span class="modal__select-all-text">Select All</span>
                             </label>
                             <span class="modal__toolbar-divider"></span>
@@ -549,7 +549,7 @@
                     <div class="modal__toolbar">
                         <div class="modal__toolbar-left">
                             <label class="modal__select-all-label">
-                                <input type="checkbox" id="select-all-missing-info" onchange="toggleSelectAll('missing-info')" class="modal__select-all-checkbox">
+                                <input type="checkbox" id="select-all-missing-info" onchange="GRNDSKPR.Dashboard.toggleSelectAll('missing-info')" class="modal__select-all-checkbox">
                                 <span class="modal__select-all-text">Select All</span>
                             </label>
                             <span class="modal__toolbar-divider"></span>
@@ -610,7 +610,7 @@
                     <div class="modal__toolbar">
                         <div class="modal__toolbar-left">
                             <label class="modal__select-all-label">
-                                <input type="checkbox" id="select-all-suggestions" onchange="toggleSelectAll('suggestions')" class="modal__select-all-checkbox">
+                                <input type="checkbox" id="select-all-suggestions" onchange="GRNDSKPR.Dashboard.toggleSelectAll('suggestions')" class="modal__select-all-checkbox">
                                 <span class="modal__select-all-text">Select All</span>
                             </label>
                             <span class="modal__toolbar-divider"></span>
@@ -1093,7 +1093,7 @@
     <script type="text/template" id="tmpl-high-signal-row">
         <tr class="modal__table-row">
             <td class="modal__table-cell modal__table-cell--nowrap">
-                <input type="checkbox" class="modal__select-all-checkbox">
+                <input type="checkbox" class="modal__select-all-checkbox" onchange="GRNDSKPR.Dashboard.updateSelectedCount(&#39;high-signal&#39;)">
             </td>
             <td class="modal__table-cell modal__table-cell--nowrap">
                 <div class="flex items-center gap-2">
@@ -1137,7 +1137,7 @@
     <script type="text/template" id="tmpl-duplicate-row">
         <tr class="modal__table-row">
             <td class="modal__table-cell modal__table-cell--nowrap">
-                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300">
+                <input type="checkbox" class="form-checkbox h-4 w-4 text-emerald-600 rounded border-slate-300" onchange="GRNDSKPR.Dashboard.updateSelectedCount(&#39;duplicates&#39;)">
             </td>
             <td class="modal__table-cell">
                 <div class="text-sm font-medium text-slate-900"><%- primary_title %></div>
@@ -1169,7 +1169,7 @@
     <script type="text/template" id="tmpl-cleanup-row">
         <tr class="modal__table-row">
             <td class="modal__table-cell modal__table-cell--nowrap">
-                <input type="checkbox" class="modal__select-all-checkbox">
+                <input type="checkbox" class="modal__select-all-checkbox" onchange="GRNDSKPR.Dashboard.updateSelectedCount(&#39;cleanup&#39;)">
             </td>
             <td class="modal__table-cell">
                 <div class="text-sm font-medium text-slate-900"><%- title %></div>
@@ -1204,7 +1204,7 @@
     <script type="text/template" id="tmpl-missing-info-row">
         <tr class="modal__table-row">
             <td class="modal__table-cell modal__table-cell--nowrap">
-                <input type="checkbox" class="modal__select-all-checkbox">
+                <input type="checkbox" class="modal__select-all-checkbox" onchange="GRNDSKPR.Dashboard.updateSelectedCount(&#39;missing-info&#39;)">
             </td>
             <td class="modal__table-cell">
                 <div class="text-sm font-medium text-slate-900"><%- title %></div>
@@ -1250,7 +1250,7 @@
     <script type="text/template" id="tmpl-suggestions-row">
         <tr class="modal__table-row">
             <td class="modal__table-cell modal__table-cell--nowrap">
-                <input type="checkbox" class="modal__select-all-checkbox">
+                <input type="checkbox" class="modal__select-all-checkbox" onchange="GRNDSKPR.Dashboard.updateSelectedCount(&#39;suggestions&#39;)">
             </td>
             <td class="modal__table-cell">
                 <div class="text-sm font-medium text-slate-900"><%- title %></div>

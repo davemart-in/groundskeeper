@@ -340,7 +340,6 @@ window.GRNDSKPR.Dashboard = (function() {
         const selectAllCheckbox = document.getElementById(`select-all-${modalId}`);
         const modal = document.getElementById(`modal-${modalId}`);
         const checkboxes = modal.querySelectorAll('tbody input[type="checkbox"]');
-        const selectedCountEl = document.getElementById(`selected-count-${modalId}`);
 
         // Toggle all checkboxes based on the "Select All" state
         checkboxes.forEach(checkbox => {
@@ -348,8 +347,33 @@ window.GRNDSKPR.Dashboard = (function() {
         });
 
         // Update count
-        const count = selectAllCheckbox.checked ? checkboxes.length : 0;
-        selectedCountEl.textContent = `${count} selected`;
+        updateSelectedCount(modalId);
+    }
+
+    /**
+     * Update the selected count for a modal
+     */
+    function updateSelectedCount(modalId) {
+        const modal = document.getElementById(`modal-${modalId}`);
+        const checkboxes = modal.querySelectorAll('tbody input[type="checkbox"]');
+        const checkedBoxes = modal.querySelectorAll('tbody input[type="checkbox"]:checked');
+        const selectedCountEl = document.getElementById(`selected-count-${modalId}`);
+        const selectAllCheckbox = document.getElementById(`select-all-${modalId}`);
+
+        // Update count display
+        selectedCountEl.textContent = `${checkedBoxes.length} selected`;
+
+        // Update "Select All" checkbox state
+        if (checkedBoxes.length === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length === checkboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
     }
 
     /**
@@ -544,6 +568,7 @@ window.GRNDSKPR.Dashboard = (function() {
         openModal: openModal,
         closeModal: closeModal,
         toggleSelectAll: toggleSelectAll,
+        updateSelectedCount: updateSelectedCount,
         copySelectedIssueUrls: copySelectedIssueUrls,
         toggleAreas: toggleAreas,
         filterDashboard: filterDashboard,
