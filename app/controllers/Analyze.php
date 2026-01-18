@@ -848,6 +848,24 @@ function analyzeIssueBatch($batch, $areas, $repoLabels, $openai) {
         $issuesData .= "\n";
     }
 
+    // Get repository priority labels for context
+    $priorityLabelContext = "";
+    if (!empty($repoLabels)) {
+        $priorityKeywords = ['priority', 'critical', 'urgent', 'p0', 'p1', 'p2', 'p3', 'severity', 'blocker'];
+        $priorityLabelsFound = [];
+        foreach ($repoLabels as $label) {
+            foreach ($priorityKeywords as $keyword) {
+                if (stripos($label, $keyword) !== false) {
+                    $priorityLabelsFound[] = $label;
+                    break;
+                }
+            }
+        }
+        if (!empty($priorityLabelsFound)) {
+            $priorityLabelContext = "Repository priority labels: " . implode(', ', $priorityLabelsFound) . "\n\n";
+        }
+    }
+
     // Build prompt
     $prompt = "Analyze these GitHub issues and provide structured analysis for each one.
 
@@ -855,13 +873,13 @@ $areaContext
 
 $labelContext
 
-For each issue, determine:
-1. is_high_signal (bool): Mark as true ONLY if the issue meets 2 or more of these criteria:
+{$priorityLabelContext}For each issue, determine:
+1. is_high_signal (bool): Mark as true ONLY if the issue meets 2 or more of these criteria AND does NOT already have a priority label:
    - Affects core functionality, causes crashes, data loss, or creates security vulnerabilities
    - Has widespread user impact (mentioned by multiple users or indicates systemic problem)
    - Blocks other development work or creates significant performance issues
    - Represents a quick win with high value (relatively easy fix with major impact)
-   - Do NOT mark as high signal: feature requests, minor bugs, cosmetic issues, nice-to-haves, documentation updates
+   - IMPORTANT: Do NOT mark as high signal if the issue already has any priority/severity label, OR if it's a feature request, minor bug, cosmetic issue, nice-to-have, or documentation update
 2. is_cleanup_candidate (bool): Should this issue be closed (stale, duplicate, not actionable)?
 3. is_missing_context (bool): Does it lack critical information?
 4. missing_elements (array): What specific information is missing (e.g., \"steps to reproduce\", \"error logs\")?

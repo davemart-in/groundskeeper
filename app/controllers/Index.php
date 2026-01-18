@@ -43,7 +43,9 @@ if ($glob['selected_repo']) {
 	$glob['area_stats'] = $areaModel->getStatsForRepository($repoId, $glob['total_issues']);
 
 	/* GET CATEGORY COUNTS ---- */
-	$glob['high_signal_count'] = $issueModel->countHighSignal($repoId);
+	// Get priority labels for filtering
+	$priorityLabels = json_decode($glob['selected_repo']['priority_labels'] ?? '[]', true);
+	$glob['high_signal_count'] = $issueModel->countHighSignal($repoId, $priorityLabels);
 	$glob['cleanup_count'] = $issueModel->countCleanupCandidates($repoId);
 	$glob['missing_info_count'] = $issueModel->countMissingContext($repoId);
 	$glob['suggestions_count'] = $issueModel->countMissingLabels($repoId);
@@ -53,8 +55,7 @@ if ($glob['selected_repo']) {
 	$analysisResults = $analysisResultModel->findByRepository($repoId);
 	$glob['duplicates_count'] = count($analysisResults['duplicates'] ?? []);
 
-	// Check if priority labels are configured (priority_labels is stored as JSON)
-	$priorityLabels = json_decode($glob['selected_repo']['priority_labels'] ?? '[]', true);
+	// Store whether priority labels are configured
 	$hasPriorityLabels = !empty($priorityLabels);
 } else {
 	$glob['total_issues'] = 0;

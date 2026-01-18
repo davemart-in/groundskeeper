@@ -213,6 +213,11 @@ window.GRNDSKPR.Dashboard = (function() {
             data.priorityIcon = priority.icon;
             data.reactions_total = issue.reactions_total || 0;
             data.comments_count = issue.comments_count || 0;
+
+            // Check if issue has a priority label
+            const priorityLabel = findPriorityLabel(issue.labels);
+            data.priority_label = priorityLabel;
+            data.priority_label_class = priorityLabel ? getPriorityLabelClass(priorityLabel) : '';
         } else if (modalId === 'cleanup') {
             data.openedText = formatTimeAgo(issue.created_at);
             data.labels = parseLabels(issue.labels);
@@ -298,6 +303,43 @@ window.GRNDSKPR.Dashboard = (function() {
             }
         }
         return [];
+    }
+
+    /**
+     * Find priority label from issue labels
+     */
+    function findPriorityLabel(labels) {
+        const parsedLabels = parseLabels(labels);
+        const priorityKeywords = ['priority', 'critical', 'urgent', 'p0', 'p1', 'p2', 'p3', 'severity', 'blocker'];
+
+        for (const label of parsedLabels) {
+            const labelLower = label.toLowerCase();
+            for (const keyword of priorityKeywords) {
+                if (labelLower.includes(keyword)) {
+                    return label;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get CSS class for priority label display
+     */
+    function getPriorityLabelClass(label) {
+        const labelLower = label.toLowerCase();
+
+        if (labelLower.includes('critical') || labelLower.includes('p0') || labelLower.includes('blocker')) {
+            return 'bg-red-100 text-red-800 border-red-200';
+        } else if (labelLower.includes('high') || labelLower.includes('p1') || labelLower.includes('urgent')) {
+            return 'bg-orange-100 text-orange-800 border-orange-200';
+        } else if (labelLower.includes('medium') || labelLower.includes('p2')) {
+            return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        } else if (labelLower.includes('low') || labelLower.includes('p3')) {
+            return 'bg-blue-100 text-blue-800 border-blue-200';
+        }
+
+        return 'bg-slate-100 text-slate-800 border-slate-200';
     }
 
     /**

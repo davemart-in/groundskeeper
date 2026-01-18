@@ -308,23 +308,15 @@ class Issue {
     }
 
     /**
-     * Count high signal issues for a repository (filtered by priority score >= 50)
+     * Count high signal issues missing priority labels
      *
      * @param int $repositoryId Repository ID
+     * @param array $priorityLabels Array of priority label names to check against
      * @return int Count
      */
-    public function countHighSignal($repositoryId) {
-        $issues = $this->findHighSignal($repositoryId);
-        $count = 0;
-        
-        foreach ($issues as $issue) {
-            $score = $this->calculatePriorityScore($issue);
-            if ($score >= 50) {
-                $count++;
-            }
-        }
-        
-        return $count;
+    public function countHighSignal($repositoryId, $priorityLabels = []) {
+        $issues = $this->findHighSignal($repositoryId, null, $priorityLabels);
+        return count($issues);
     }
 
     /**
@@ -418,13 +410,15 @@ class Issue {
     }
 
     /**
-     * Find high signal issues for a repository
+     * Find high signal issues missing priority labels
+     * Only includes Critical, High, and Medium priority issues (score >= 40)
      *
      * @param int $repositoryId Repository ID
      * @param int|null $areaId Optional area filter
+     * @param array $priorityLabels Array of priority label names to check against
      * @return array Array of issues
      */
-    public function findHighSignal($repositoryId, $areaId = null) {
+    public function findHighSignal($repositoryId, $areaId = null, $priorityLabels = []) {
         $sql = "SELECT * FROM issues WHERE repository_id = ? AND is_high_signal = 1";
         $params = [$repositoryId];
 
@@ -436,9 +430,45 @@ class Issue {
         $sql .= " ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql, $params);
 
-        return array_map(function($row) {
+        $issues = array_map(function($row) {
             return $this->rowToArray($row);
         }, $rows);
+
+        // Filter to only issues missing priority labels AND with score >= 40
+        $filteredIssues = [];
+        foreach ($issues as $issue) {
+            // Calculate priority score
+            $score = $this->calculatePriorityScore($issue);
+
+            // Only include issues with score >= 40 (Critical, High, Medium)
+            if ($score < 40) {
+                continue;
+            }
+
+            // Check if issue already has priority label
+            if (!empty($priorityLabels)) {
+                $issueLabels = $issue['labels'] ?? [];
+                $hasPriorityLabel = false;
+
+                foreach ($issueLabels as $label) {
+                    foreach ($priorityLabels as $priorityLabel) {
+                        if (strcasecmp($label, $priorityLabel) === 0) {
+                            $hasPriorityLabel = true;
+                            break 2;
+                        }
+                    }
+                }
+
+                // Skip if already has priority label
+                if ($hasPriorityLabel) {
+                    continue;
+                }
+            }
+
+            $filteredIssues[] = $issue;
+        }
+
+        return $filteredIssues;
     }
 
     /**

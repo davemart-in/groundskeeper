@@ -66,7 +66,7 @@
                         <div class="dashboard-controls__status-info">
                             <span class="dashboard-controls__status-indicator" style="background: #cbd5e1;"></span>
                             Not yet audited
-                            <form id="audit-form" method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form">
+                            <form id="audit-form" method="POST" action="<?php echo BASEURL; ?>audit/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form" data-repo-id="<?php echo $glob['selected_repo']['id']; ?>">
                                 <button type="submit" class="dashboard-controls__sync-btn" style="color: #059669; border-color: #a7f3d0; background: #d1fae5;"><i class="fa-solid fa-play mr-1"></i> Run Audit</button>
                             </form>
                         </div>
@@ -74,7 +74,7 @@
                         <div class="dashboard-controls__status-info">
                             <span class="dashboard-controls__status-indicator"></span>
                             Last audited <?php echo date('M j, Y', $glob['selected_repo']['last_audited_at']); ?>
-                            <form id="sync-form" method="POST" action="<?php echo BASEURL; ?>sync/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form">
+                            <form id="sync-form" method="POST" action="<?php echo BASEURL; ?>sync/run/<?php echo $glob['selected_repo']['id']; ?>" class="dashboard-controls__sync-form" data-repo-id="<?php echo $glob['selected_repo']['id']; ?>">
                                 <button type="submit" class="dashboard-controls__sync-btn"><i class="fa-solid fa-arrows-rotate mr-1"></i> Update issues and re-analyze</button>
                             </form>
                         </div>
@@ -110,15 +110,15 @@
                         <?php endif; ?>
                     </div>
 
-                    <!-- Action Card: High Signal -->
+                    <!-- Action Card: Missing Priority Labels -->
                     <div class="action-card action-card--high-signal">
                         <div class="action-card__content">
                             <div class="action-card__icon action-card__icon--high-signal">
                                 <i class="fa-solid fa-fire"></i>
                             </div>
                             <div class="action-card__text">
-                                <h4 class="action-card__title"><span id="stat-high-signal"><?php echo $glob['high_signal_count']; ?></span> High Signal Issues</h4>
-                                <p class="action-card__description">Valuable, actionable issues worth prioritizing</p>
+                                <h4 class="action-card__title"><span id="stat-high-signal"><?php echo $glob['high_signal_count']; ?></span> Missing Priority Labels</h4>
+                                <p class="action-card__description">Critical/High/Medium issues missing priority labels</p>
                             </div>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.openModal('high-signal')" class="action-card__button">
@@ -419,8 +419,8 @@
                     <!-- Modal Header -->
                     <div class="modal__header">
                         <div class="modal__header-content">
-                            <h3 class="modal__title">High Signal Issues Queue</h3>
-                            <p class="modal__description"><?php echo $glob['high_signal_count']; ?> valuable, actionable issues identified by AI analysis.</p>
+                            <h3 class="modal__title">Missing Priority Labels</h3>
+                            <p class="modal__description"><?php echo $glob['high_signal_count']; ?> Critical/High/Medium issues that need priority labels.</p>
                         </div>
                         <button onclick="GRNDSKPR.Dashboard.closeModal('high-signal')" class="modal__close-btn">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -457,7 +457,7 @@
                                     <th scope="col" class="modal__table-header modal__table-header--checkbox"></th>
                                     <th scope="col" class="modal__table-header">Priority</th>
                                     <th scope="col" class="modal__table-header">Issue</th>
-                                    <th scope="col" class="modal__table-header">Engagement</th>
+                                    <th scope="col" class="modal__table-header" style="white-space: nowrap;">Current Priority</th>
                                     <th scope="col" class="modal__table-header modal__table-header--actions"><span class="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
@@ -695,6 +695,8 @@
     </div>
 
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-utility.js"></script>
+    <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-app.js"></script>
+    <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-sync.js"></script>
     <script>
         // Initialize dashboard configuration
         window.GRNDSKPR_CONFIG = {
@@ -705,8 +707,12 @@
         // Cache for modal data to avoid refetching
         window.GRNDSKPR_CACHE = {};
 
-        // Handle session messages
+        // Initialize modules when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize sync module
+            GRNDSKPR.Sync.init(GRNDSKPR_CONFIG.baseUrl);
+
+            // Handle session messages
             <?php if (isset($_SESSION['message'])): ?>
                 GRNDSKPR.Dashboard.showToast('<?php echo addslashes($_SESSION['message']); ?>');
                 <?php unset($_SESSION['message']); ?>
@@ -723,7 +729,6 @@
             <?php endif; ?>
         });
     </script>
-    <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-app.js"></script>
 
     <!-- Toast Notification -->
     <div id="toast" class="alert"></div>
@@ -781,38 +786,7 @@
             </form>
         </div>
     </div>
-    <script>
-        // Store job ID from pending areas for continuation
-        window.PENDING_JOB_ID = <?php echo $glob['pending_areas']['job_id'] ?? 'null'; ?>;
-    </script>
     <?php endif; ?>
-
-    <!-- Resume/Restart Analysis Modal -->
-    <div id="resume-modal" class="resume-modal hidden">
-        <div class="resume-modal__content">
-            <h3 class="resume-modal__title">
-                <i class="fa-solid fa-pause-circle"></i>
-                Incomplete Analysis Found
-            </h3>
-            <p class="resume-modal__message">
-                You have an incomplete analysis with <span id="resume-processed" class="resume-modal__message--highlight"></span> of <span id="resume-total" class="resume-modal__message--highlight"></span> issues processed.
-            </p>
-            <p class="resume-modal__message">
-                Would you like to continue from where you left off or start over?
-            </p>
-
-            <div class="resume-modal__actions">
-                <button id="restart-btn" class="resume-modal__btn resume-modal__btn--restart">
-                    <i class="fa-solid fa-rotate-right mr-1"></i>
-                    Start Over
-                </button>
-                <button id="resume-btn" class="resume-modal__btn resume-modal__btn--resume">
-                    <i class="fa-solid fa-play mr-1"></i>
-                    Continue
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Unified Progress Modal -->
     <div id="progress-modal" class="progress-modal hidden">
@@ -869,370 +843,8 @@
         </div>
     </div>
 
-    <script>
-    // Unified sync & analysis progress handling
-    const BASEURL = '<?php echo BASEURL; ?>';
-    let currentJobId = null;
-    let currentStep = 'sync'; // sync, areas, analyze
-
-    // Audit form submission - runs audit then triggers sync/analyze
-    document.getElementById('audit-form')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        runAuditThenSync(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
-    });
-
-    // Sync form submission
-    document.getElementById('sync-form')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        startSync(<?php echo $glob['selected_repo']['id'] ?? 0; ?>);
-    });
-
-    // Area approval form submission - saves areas then continues analysis
-    document.getElementById('area-approval-form')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        approveAreasAndContinue();
-    });
-
-    function approveAreasAndContinue() {
-        const areasText = document.getElementById('area-approval-textarea').value;
-        
-        fetch(BASEURL + 'analyze/approve-areas', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: 'areas=' + encodeURIComponent(areasText)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                alert('Failed to save areas: ' + (data.error || 'Unknown error'));
-                return;
-            }
-
-            // Hide area approval modal
-            document.getElementById('area-approval-modal').classList.add('hidden');
-
-            // Continue with analysis if we have a job ID
-            if (data.job_id) {
-                currentJobId = data.job_id;
-                currentStep = 'analyze';
-                showProgressModal();
-                
-                // Mark sync and areas as complete
-                setStepIcon('sync', 'complete', 'check');
-                setStepLine(1, true);
-                setStepIcon('areas', 'complete', 'check');
-                setStepLine(2, true);
-                
-                // Start analysis
-                processAnalyzeChunk();
-            } else {
-                // No job ID, just reload
-                window.location.reload();
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Failed to save areas');
-        });
-    }
-
-    function runAuditThenSync(repoId) {
-        // Show progress modal immediately
-        showProgressModal();
-        document.getElementById('progress-text').textContent = 'Fetching issues from GitHub...';
-        document.getElementById('progress-percent').textContent = '10%';
-        document.getElementById('progress-bar').style.width = '10%';
-        document.getElementById('progress-details').textContent = 'Running initial audit...';
-
-        fetch(BASEURL + 'audit/run/' + repoId, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                showError(data.error || 'Audit failed');
-                return;
-            }
-
-            // Audit complete, now start the sync/analyze flow
-            document.getElementById('progress-details').textContent = 
-                `Imported ${data.issue_count} issues. Starting analysis...`;
-            
-            // Chain to startSync
-            startSync(repoId);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            showError('Failed to run audit');
-        });
-    }
-
-    function startSync(repoId) {
-        fetch(BASEURL + 'sync/run/' + repoId, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                alert('Failed to start sync: ' + (data.error || 'Unknown error'));
-                return;
-            }
-
-            if (data.has_existing_job) {
-                showResumeModal(data.job_id, data.status, data.processed, data.total);
-            } else {
-                currentJobId = data.job_id;
-                currentStep = 'sync';
-                showProgressModal();
-                processSyncStep();
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Failed to start sync');
-        });
-    }
-
-    function showProgressModal() {
-        resetStepIndicators();
-        document.getElementById('progress-modal').classList.remove('hidden');
-    }
-
-    // Helper functions for step indicators
-    function setStepIcon(stepId, state, icon, spinning = false) {
-        const stateClasses = {
-            inactive: 'progress-modal__step-icon--inactive',
-            active: 'progress-modal__step-icon--active',
-            complete: 'progress-modal__step-icon--complete'
-        };
-        const el = document.getElementById(`step-${stepId}-icon`);
-        el.className = `progress-modal__step-icon ${stateClasses[state]}`;
-        el.innerHTML = `<i class="fa-solid fa-${icon}${spinning ? ' fa-spin' : ''}"></i>`;
-    }
-
-    function setStepLine(lineId, complete) {
-        const el = document.getElementById(`step-line-${lineId}`);
-        el.className = `progress-modal__step-line ${complete ? 'progress-modal__step-line--complete' : 'progress-modal__step-line--inactive'}`;
-    }
-
-    function resetStepIndicators() {
-        setStepIcon('sync', 'inactive', 'sync');
-        setStepIcon('areas', 'inactive', 'layer-group');
-        setStepIcon('analyze', 'inactive', 'chart-line');
-        setStepLine(1, false);
-        setStepLine(2, false);
-    }
-
-    function updateStepIndicator(step) {
-        if (step === 'sync') {
-            setStepIcon('sync', 'active', 'sync');
-        } else if (step === 'areas') {
-            setStepIcon('sync', 'complete', 'check');
-            setStepLine(1, true);
-            setStepIcon('areas', 'active', 'layer-group');
-        } else if (step === 'analyze') {
-            setStepIcon('sync', 'complete', 'check');
-            setStepLine(1, true);
-            setStepIcon('areas', 'complete', 'check');
-            setStepLine(2, true);
-            setStepIcon('analyze', 'active', 'chart-line');
-        }
-    }
-
-    function processSyncStep() {
-        updateStepIndicator('sync');
-        document.getElementById('progress-text').textContent = 'Syncing issues from GitHub...';
-        document.getElementById('progress-percent').textContent = '33%';
-        document.getElementById('progress-bar').style.width = '33%';
-        document.getElementById('progress-details').textContent = 'Comparing local and remote issues...';
-
-        fetch(BASEURL + 'sync/process-sync/' + currentJobId, {
-            method: 'POST'
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                showError(data.error || 'Sync failed');
-                return;
-            }
-
-            // Show sync stats
-            const stats = data.stats;
-            const parts = [];
-            if (stats.added > 0) parts.push(`${stats.added} new`);
-            if (stats.updated > 0) parts.push(`${stats.updated} updated`);
-            if (stats.removed > 0) parts.push(`${stats.removed} removed`);
-            if (stats.unchanged > 0) parts.push(`${stats.unchanged} unchanged`);
-
-            document.getElementById('progress-details').textContent =
-                `Synced ${stats.total} open issues: ${parts.join(', ')}`;
-
-            // Move to area check step
-            currentStep = 'areas';
-            setTimeout(() => processAreasStep(), 1000);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            showError('Network error during sync. Retrying...');
-            setTimeout(() => processSyncStep(), 5000);
-        });
-    }
-
-    function processAreasStep() {
-        updateStepIndicator('areas');
-        document.getElementById('progress-text').textContent = 'Checking areas...';
-        document.getElementById('progress-percent').textContent = '66%';
-        document.getElementById('progress-bar').style.width = '66%';
-
-        fetch(BASEURL + 'sync/check-areas/' + currentJobId, {
-            method: 'POST'
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                showError(data.error || 'Area check failed');
-                return;
-            }
-
-            if (data.needs_area_approval) {
-                // Areas need approval - reload page to show modal
-                document.getElementById('progress-modal').classList.add('hidden');
-                window.location.reload();
-            } else {
-                // Areas exist, move to analysis
-                currentStep = 'analyze';
-                setTimeout(() => processAnalyzeChunk(), 1000);
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            showError('Network error during area check. Retrying...');
-            setTimeout(() => processAreasStep(), 5000);
-        });
-    }
-
-    function processAnalyzeChunk() {
-        updateStepIndicator('analyze');
-        document.getElementById('progress-text').textContent = 'Analyzing issues...';
-
-        fetch(BASEURL + 'sync/process-analyze/' + currentJobId, {
-            method: 'POST'
-        })
-        .then(res => {
-            // Check if response is JSON before parsing
-            const contentType = res.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                return res.text().then(text => {
-                    console.error('Non-JSON response:', text.substring(0, 500));
-                    throw new Error('Server returned HTML instead of JSON. Check server error logs.');
-                });
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (!data.success) {
-                showError(data.error || 'Analysis failed');
-                return;
-            }
-
-            updateProgress(data.processed, data.total, data.percent);
-
-            if (data.completed) {
-                completeSync();
-            } else {
-                // Continue processing next chunk
-                setTimeout(() => processAnalyzeChunk(), 1000);
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            showError('Network error during analysis. Retrying...');
-            setTimeout(() => processAnalyzeChunk(), 5000);
-        });
-    }
-
-    function showResumeModal(jobId, status, processed, total) {
-        currentJobId = jobId;
-
-        // Determine which step to resume from based on status and progress
-        if (status === 'pending' || status === 'syncing') {
-            // Resume from sync step
-            currentStep = 'sync';
-            showProgressModal();
-            processSyncStep();
-        } else if (status === 'processing') {
-            // Resume from analysis step - skip sync and areas
-            currentStep = 'analyze';
-            showProgressModal();
-
-            // Mark sync and areas as complete
-            setStepIcon('sync', 'complete', 'check');
-            setStepLine(1, true);
-            setStepIcon('areas', 'complete', 'check');
-            setStepLine(2, true);
-            setStepIcon('analyze', 'active', 'chart-line');
-
-            // Set progress to where we left off
-            const percent = total > 0 ? Math.round((processed / total) * 100) : 0;
-            const overallPercent = 67 + Math.round(percent * 0.33);
-            document.getElementById('progress-percent').textContent = overallPercent + '%';
-            document.getElementById('progress-bar').style.width = overallPercent + '%';
-            document.getElementById('progress-text').textContent = 'Analyzing issues...';
-            document.getElementById('progress-count').textContent = processed;
-            document.getElementById('progress-total').textContent = total;
-            document.getElementById('progress-details').textContent = `${processed} of ${total} issues analyzed`;
-
-            // Continue processing
-            processAnalyzeChunk();
-        }
-    }
-
-    function updateProgress(processed, total, percent) {
-        // Map analysis progress from 67% to 100%
-        // 0% analysis = 67% overall, 100% analysis = 100% overall
-        const overallPercent = 67 + Math.round(percent * 0.33);
-
-        const countEl = document.getElementById('progress-count');
-        const totalEl = document.getElementById('progress-total');
-        const percentEl = document.getElementById('progress-percent');
-        const barEl = document.getElementById('progress-bar');
-        const detailsEl = document.getElementById('progress-details');
-
-        if (countEl) countEl.textContent = processed;
-        if (totalEl) totalEl.textContent = total;
-        if (percentEl) percentEl.textContent = overallPercent + '%';
-        if (barEl) barEl.style.width = overallPercent + '%';
-        if (detailsEl) detailsEl.textContent = `${processed} of ${total} issues analyzed`;
-    }
-
-    function showError(message) {
-        const errorDiv = document.getElementById('progress-error');
-        errorDiv.querySelector('p').textContent = message;
-        errorDiv.classList.remove('hidden');
-    }
-
-    function completeSync() {
-        // Complete all steps
-        setStepIcon('sync', 'complete', 'check');
-        setStepLine(1, true);
-        setStepIcon('areas', 'complete', 'check');
-        setStepLine(2, true);
-        setStepIcon('analyze', 'complete', 'check');
-
-        document.getElementById('progress-text').textContent = 'Sync & analysis complete!';
-        document.getElementById('progress-percent').textContent = '100%';
-        document.getElementById('progress-bar').style.width = '100%';
-
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-    }
-    </script>
-
-    <!-- Template: High Signal Row -->
-    <!-- Variables: title, url, issue_number, priority_score, priorityClass, priorityBg, priorityText, priorityIcon, timeText, reactions_total, comments_count -->
+    <!-- Template: Missing Priority Labels Row -->
+    <!-- Variables: title, url, issue_number, priority_score, priorityClass, priorityBg, priorityText, priorityIcon, timeText, priority_label, priority_label_class -->
     <script type="text/template" id="tmpl-high-signal-row">
         <tr class="modal__table-row">
             <td class="modal__table-cell modal__table-cell--nowrap">
@@ -1258,16 +870,13 @@
                 </div>
             </td>
             <td class="modal__table-cell modal__table-cell--nowrap">
-                <div class="flex items-center gap-3 text-sm text-slate-600">
-                    <span class="flex items-center gap-1" title="Reactions">
-                        <i class="fa-solid fa-heart text-slate-400 text-xs"></i>
-                        <%= reactions_total %>
+                <% if (priority_label) { %>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold <%= priority_label_class %>">
+                        <%= priority_label %>
                     </span>
-                    <span class="flex items-center gap-1" title="Comments">
-                        <i class="fa-solid fa-comment text-slate-400 text-xs"></i>
-                        <%= comments_count %>
-                    </span>
-                </div>
+                <% } else { %>
+                    <span class="text-sm text-slate-500 italic">Unprioritized</span>
+                <% } %>
             </td>
             <td class="modal__table-cell modal__table-cell--nowrap modal__table-cell--right">
                 <a href="<%= url %>" target="_blank" class="text-emerald-600 hover:text-emerald-900 font-medium">View</a>

@@ -76,11 +76,16 @@ function handleStats() {
 	$analysisResultModel = new AnalysisResult();
 	$analysisResults = $analysisResultModel->findByRepository($repoId);
 
+	// Get repository priority labels
+	$repoModel = new Repository();
+	$repo = $repoModel->findById($repoId);
+	$priorityLabels = json_decode($repo['priority_labels'] ?? '[]', true);
+
 	echo json_encode([
 		'success' => true,
 		'data' => [
 			'total' => $issueModel->countByRepository($repoId),
-			'high_signal' => $issueModel->countHighSignal($repoId),
+			'high_signal' => $issueModel->countHighSignal($repoId, $priorityLabels),
 			'duplicates' => count($analysisResults['duplicates'] ?? []),
 			'cleanup' => $issueModel->countCleanupCandidates($repoId),
 			'missing_info' => $issueModel->countMissingContext($repoId),
@@ -90,7 +95,7 @@ function handleStats() {
 }
 
 /**
- * Get high signal issues
+ * Get high signal issues missing priority labels
  */
 function handleHighSignal() {
 	$repoId = $_GET['repo_id'] ?? null;
@@ -105,19 +110,17 @@ function handleHighSignal() {
 		exit;
 	}
 
+	// Get repository priority labels
+	$repoModel = new Repository();
+	$repo = $repoModel->findById($repoId);
+	$priorityLabels = json_decode($repo['priority_labels'] ?? '[]', true);
+
 	$issueModel = new Issue();
-	$rows = $issueModel->findHighSignal($repoId, $areaId);
+	$issues = $issueModel->findHighSignal($repoId, $areaId, $priorityLabels);
 
-	// Calculate priority scores and filter
-	$issues = [];
-	foreach ($rows as $issue) {
-		$score = $issueModel->calculatePriorityScore($issue);
-		$issue['priority_score'] = $score;
-
-		// Only include issues with score >= 50
-		if ($score >= 50) {
-			$issues[] = $issue;
-		}
+	// Calculate priority scores for display
+	foreach ($issues as &$issue) {
+		$issue['priority_score'] = $issueModel->calculatePriorityScore($issue);
 	}
 
 	// Sort by priority score descending
