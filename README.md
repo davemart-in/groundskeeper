@@ -29,7 +29,34 @@ That's it! No additional dependencies needed.
    cd groundskeeper
    ```
 
-2. **Configure environment variables**
+2. **Configure paths**
+
+   Edit `app/config/define.php` and update these values to match your setup:
+
+   ```php
+   // Update ROOTPATH to your installation directory
+   define('ROOTPATH', '/path/to/groundskeeper/');
+
+   // Update BASEURL to your local development URL
+   define('BASEURL', 'http://localhost:8000/');
+   ```
+
+   **Optional: Use a custom local domain**
+
+   If you prefer using `groundskeeper.dev` instead of `localhost`, add this to your hosts file:
+
+   ```bash
+   # On macOS/Linux: /etc/hosts
+   # On Windows: C:\Windows\System32\drivers\etc\hosts
+   127.0.0.1 groundskeeper.dev
+   ```
+
+   Then update `BASEURL` accordingly:
+   ```php
+   define('BASEURL', 'http://groundskeeper.dev:8000/');
+   ```
+
+3. **Configure environment variables**
 
    **GitHub Personal Access Token Setup:**
    - Create a token at https://github.com/settings/tokens
@@ -41,7 +68,7 @@ That's it! No additional dependencies needed.
    OPENAI_API_KEY=your_openai_api_key
    ```
 
-3. **Run the application**
+4. **Run the application**
 
    Using PHP's built-in server:
    ```bash
@@ -51,9 +78,9 @@ That's it! No additional dependencies needed.
 
    Or configure with your preferred web server (Apache/Nginx).
 
-4. **Access the application**
+5. **Access the application**
 
-   Navigate to `http://localhost:8000` in your browser.
+   Navigate to your configured `BASEURL` in your browser (e.g., `http://localhost:8000`).
 
    The database and sessions table will be created automatically on first run.
 
