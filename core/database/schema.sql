@@ -1,22 +1,8 @@
 -- Groundskeeper SQLite Schema
 -- This file serves as reference for the database structure
 
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    github_id INTEGER UNIQUE,
-    github_username TEXT NOT NULL,
-    github_access_token TEXT,
-    avatar_url TEXT,
-    access_mode TEXT NOT NULL DEFAULT 'readonly',
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_github_id ON users(github_id);
-
 CREATE TABLE IF NOT EXISTS repositories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
     owner TEXT NOT NULL,
     name TEXT NOT NULL,
     full_name TEXT NOT NULL,
@@ -26,8 +12,7 @@ CREATE TABLE IF NOT EXISTS repositories (
     last_audited_at INTEGER,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE(user_id, owner, name)
+    UNIQUE(owner, name)
 );
 
 CREATE TABLE IF NOT EXISTS issues (

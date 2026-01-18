@@ -53,30 +53,10 @@ function safe($input, bool $escape_html = true) {
 }
 
 /**
- * Check if user is authenticated
+ * Get GitHub Personal Access Token from environment
  *
- * @return bool True if user is logged in
+ * @return string|null GitHub token or null if not set
  */
-function isAuthenticated() {
-	return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-}
-
-/**
- * Require authentication (redirect to home if not authenticated)
- *
- * @param string $redirectTo URL to redirect to if not authenticated
- */
-function requireAuth($redirectTo = '') {
-	if (!isAuthenticated()) {
-		redirect($redirectTo, 'You must be logged in to access this page.');
-	}
-}
-
-/**
- * Get current authenticated user
- *
- * @return User|null Current user or null if not authenticated
- */
-function getCurrentUser() {
-	return User::getCurrentUser();
+function getGitHubToken() {
+	return getenv('GITHUB_PERSONAL_ACCESS_TOKEN') ?: null;
 }

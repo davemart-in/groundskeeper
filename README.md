@@ -31,24 +31,14 @@ That's it! No additional dependencies needed.
 
 2. **Configure environment variables**
 
-   Edit `app/config/.env` with your credentials:
-   ```
-   GITHUB_CLIENT_ID=your_github_oauth_client_id
-   GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
-   ENCRYPTION_KEY=your_base64_encryption_key
-   OPENAI_API_KEY=your_openai_api_key
-   ```
-
    **GitHub Personal Access Token Setup:**
    - Create a token at https://github.com/settings/tokens
-   - Required scopes: `repo` (for private repos) or `public_repo` (for public repos only)
-   - The app uses OAuth flow, so you'll need to create a GitHub OAuth App at https://github.com/settings/developers
-   - Set Authorization callback URL to: `http://your-domain/oauth/callback`
-   - Copy the Client ID and Client Secret to your `.env` file
+   - Required scopes: `public_repo` (for public repos only)
 
-   **Generate Encryption Key:**
-   ```bash
-   php -r "echo base64_encode(random_bytes(32));"
+   Edit `app/config/.env` with your credentials:
+   ```
+   GITHUB_PERSONAL_ACCESS_TOKEN=your_github_personal_access_token
+   OPENAI_API_KEY=your_openai_api_key
    ```
 
 3. **Run the application**
@@ -71,11 +61,10 @@ That's it! No additional dependencies needed.
 
 ### First Time Setup
 
-1. **Connect GitHub** - Click to authenticate with GitHub OAuth
-2. **Add Repository** - Go to Settings and add your first repository (format: `owner/repo`)
-3. **Run Initial Audit** - Click "Run Audit" to import all open bug issues
-4. **Approve Areas** - Review and approve AI-discovered functional areas
-5. **Analysis Complete** - View your dashboard with categorized insights
+1. **Add Repository** - Go to Settings and add your first repository (format: `owner/repo`)
+2. **Run Initial Audit** - Click "Run Audit" to import all open bug issues
+3. **Approve Areas** - Review and approve AI-discovered functional areas
+4. **Analysis Complete** - View your dashboard with categorized insights
 
 ### Daily Workflow
 

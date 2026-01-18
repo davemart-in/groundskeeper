@@ -9,9 +9,6 @@ require_once(COREPATH.'libraries/File.php');
 /* DATABASE ------------------------------------------- */
 require_once(COREPATH.'libraries/Database.php');
 
-/* ENCRYPTION ------------------------------------------- */
-require_once(COREPATH.'libraries/Encryption.php');
-
 /* ERROR TRACKING ------------------------------------------- */
 require_once(COREPATH.'libraries/Error.php');
 // Set default error function for PHP
@@ -45,7 +42,6 @@ require_once(COREPATH.'libraries/GitHubAPI.php');
 require_once(COREPATH.'libraries/OpenAIAPI.php');
 
 /* MODELS ------------------------------------------- */
-require_once(APPPATH.'models/User.php');
 require_once(APPPATH.'models/Repository.php');
 require_once(APPPATH.'models/Issue.php');
 require_once(APPPATH.'models/Area.php');

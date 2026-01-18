@@ -35,17 +35,6 @@
 						<div class="settings-header__info">
 							<div class="settings-header__title-row">
 								<h2 class="settings-header__title"><?php echo htmlspecialchars($glob['selected_repo']['full_name']); ?></h2>
-								<?php if (isset($glob['user']) && $glob['user']): ?>
-									<div class="connection-badge connection-badge--connected">
-										<span class="connection-badge__indicator connection-badge__indicator--connected"></span>
-										Connected
-									</div>
-								<?php else: ?>
-									<div class="connection-badge connection-badge--disconnected">
-										<span class="connection-badge__indicator connection-badge__indicator--disconnected"></span>
-										Disconnected
-									</div>
-								<?php endif; ?>
 							</div>
 							<p class="settings-header__description">Manage how Groundskeeper interacts with this repo.</p>
 						</div>
@@ -78,58 +67,6 @@
 				<?php if (!empty($glob['repositories']) && isset($glob['selected_repo'])): ?>
 				<!-- Config Form -->
 				<div class="settings-sections">
-					<!-- GitHub Connection Section -->
-					<div class="github-connection-section">
-						<h3 class="github-connection-section__title">GitHub Connection</h3>
-						<p class="github-connection-section__description">View and analyze issues using your GitHub username and optional Personal Access Token.</p>
-
-						<?php if (isset($glob['user']) && $glob['user']): ?>
-							<!-- Connected state -->
-							<div class="github-connection-section__user">
-								<?php if (!empty($glob['user']['avatar_url'])): ?>
-									<img src="<?php echo htmlspecialchars($glob['user']['avatar_url']); ?>" alt="Avatar" class="github-connection-section__avatar">
-								<?php endif; ?>
-								<div class="github-connection-section__user-info">
-									<p class="github-connection-section__user-name">Connected as <strong>@<?php echo htmlspecialchars($glob['user']['github_username']); ?></strong></p>
-									<p class="github-connection-section__access-mode"><i class="fa-solid fa-eye"></i> Read-only access</p>
-								</div>
-							</div>
-							<div class="github-connection-section__actions">
-								<button onclick="document.getElementById('pat-form').classList.toggle('hidden')" class="github-connection-section__button github-connection-section__button--update">Update Token</button>
-								<a href="<?php echo BASEURL; ?>settings/disconnect" class="github-connection-section__button github-connection-section__button--disconnect">Disconnect</a>
-							</div>
-
-							<!-- PAT Update Form (hidden by default) -->
-							<div id="pat-form" class="github-connection-section__pat-form hidden">
-								<form method="POST" action="<?php echo BASEURL; ?>settings/update-token">
-									<div class="settings-form-field">
-										<label class="settings-form-field__label">Personal Access Token</label>
-										<input type="text" name="personal_access_token" class="settings-form-field__input" placeholder="ghp_xxxxxxxxxxxx">
-										<p class="settings-form-field__help">Update your PAT to increase rate limits (5000 req/hr)</p>
-									</div>
-									<button type="submit" class="settings-form-field__submit">Update Token</button>
-								</form>
-							</div>
-						<?php else: ?>
-							<!-- Not connected state -->
-							<form method="POST" action="<?php echo BASEURL; ?>settings/connect-readonly" class="github-connection-section__connect-form">
-								<div class="settings-form-field">
-									<label class="settings-form-field__label">GitHub Username</label>
-									<input type="text" name="github_username" required class="settings-form-field__input" placeholder="your-github-username">
-								</div>
-								<div class="settings-form-field">
-									<label class="settings-form-field__label">Personal Access Token (optional)</label>
-									<input type="text" name="personal_access_token" class="settings-form-field__input" placeholder="ghp_xxxxxxxxxxxx">
-									<p class="settings-form-field__help">Without token: 60 requests/hour. With token: 5000 requests/hour. <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Groundskeeper" target="_blank">Create token</a></p>
-								</div>
-								<button type="submit" class="github-connection-section__submit-btn">
-									<i class="fa-brands fa-github"></i>
-									Connect GitHub
-								</button>
-							</form>
-						<?php endif; ?>
-					</div>
-
 					<?php if ($glob['selected_repo']['last_synced_at']): ?>
 					<!-- Labels Section -->
 					<div class="label-mapping-section">

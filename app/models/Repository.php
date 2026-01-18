@@ -59,7 +59,7 @@ class Repository {
     /**
      * Create a new repository
      *
-     * @param array $data Repository data (owner, name, bug_label, user_id)
+     * @param array $data Repository data (owner, name, bug_label)
      * @return array Created repository data
      */
     public function create($data) {
@@ -69,14 +69,10 @@ class Repository {
         $name = $data['name'];
         $fullName = $owner . '/' . $name;
 
-        // Get user_id from data, session, or default to 1 for backward compatibility
-        $userId = $data['user_id'] ?? $_SESSION['user_id'] ?? 1;
-
-        $sql = "INSERT INTO repositories (user_id, owner, name, full_name, bug_label, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO repositories (owner, name, full_name, bug_label, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)";
 
         $this->db->execute($sql, [
-            $userId,
             $owner,
             $name,
             $fullName,

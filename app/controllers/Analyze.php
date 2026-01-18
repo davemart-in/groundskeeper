@@ -726,8 +726,7 @@ function analyzeIssueChunk($repoId, $chunk, $areas) {
     }
 
     // Get all labels from repo
-    $githubToken = null;
-    $githubApi = new GitHubAPI($githubToken);
+    $githubApi = new GitHubAPI(getGitHubToken());
     $repoLabels = [];
     try {
         $labels = $githubApi->getLabels($repo['owner'], $repo['name']);

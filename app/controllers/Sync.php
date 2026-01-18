@@ -24,9 +24,6 @@ $jobModel = new AnalysisJob();
 $segment1 = $glob['route'][1] ?? '';
 $segment2 = $glob['route'][2] ?? '';
 
-// Get current user
-$user = User::getCurrentUser();
-
 // Route: /sync/run/{repo_id} - Start unified sync & analysis
 if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $repoId = (int)$segment2;
@@ -92,8 +89,7 @@ if ($segment1 === 'process-sync' && is_numeric($segment2) && $_SERVER['REQUEST_M
         $repo = $repoModel->findById($job['repository_id']);
 
         // Initialize GitHub API
-        $githubToken = $user ? $user->getDecryptedToken() : null;
-        $github = new GitHubAPI($githubToken);
+        $github = new GitHubAPI(getGitHubToken());
 
         // Fetch issues from GitHub with bug label filter
         $filters = [

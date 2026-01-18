@@ -8,7 +8,6 @@
 
 $repoModel = new Repository();
 $issueModel = new Issue();
-$user = User::getCurrentUser();
 $segment1 = $glob['route'][1] ?? '';
 $segment2 = $glob['route'][2] ?? '';
 
@@ -29,8 +28,7 @@ if ($segment1 === 'run' && is_numeric($segment2) && $_SERVER['REQUEST_METHOD'] =
 
     try {
         // Initialize GitHub API
-        $githubToken = $user ? $user->getDecryptedToken() : null;
-        $github = new GitHubAPI($githubToken);
+        $github = new GitHubAPI(getGitHubToken());
 
         // Fetch issues from GitHub with bug label filter
         $filters = [
