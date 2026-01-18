@@ -93,20 +93,6 @@ class AnalysisJob {
     }
 
     /**
-     * Start job
-     *
-     * @param int $jobId Job ID
-     * @return bool Success status
-     */
-    public function start($jobId) {
-        $sql = "UPDATE analysis_jobs
-                SET status = 'processing', started_at = ?
-                WHERE id = ?";
-
-        return $this->db->execute($sql, [time(), $jobId]);
-    }
-
-    /**
      * Mark job as completed
      *
      * @param int $jobId Job ID

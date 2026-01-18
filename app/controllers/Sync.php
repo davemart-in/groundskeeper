@@ -92,7 +92,7 @@ if ($segment1 === 'process-sync' && is_numeric($segment2) && $_SERVER['REQUEST_M
         $repo = $repoModel->findById($job['repository_id']);
 
         // Initialize GitHub API
-        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $githubToken = $user?->github_access_token ?: null;
         $github = new GitHubAPI($githubToken);
 
         // Fetch issues from GitHub with bug label filter
@@ -142,7 +142,10 @@ if ($segment1 === 'process-sync' && is_numeric($segment2) && $_SERVER['REQUEST_M
                         'state' => $githubIssue['state'],
                         'updated_at' => $githubUpdatedAt,
                         'labels' => json_encode(array_column($githubIssue['labels'], 'name')),
-                        'label_colors' => json_encode(array_column($githubIssue['labels'], 'color')),
+                        'label_colors' => json_encode(array_combine(
+                            array_column($githubIssue['labels'], 'name'),
+                            array_column($githubIssue['labels'], 'color')
+                        ) ?: []),
                         'assignees' => json_encode(array_column($githubIssue['assignees'] ?? [], 'login')),
                         'milestone' => isset($githubIssue['milestone']) ? $githubIssue['milestone']['title'] : null,
                         'comments_count' => $githubIssue['comments'] ?? 0,

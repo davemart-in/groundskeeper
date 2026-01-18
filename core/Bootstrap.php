@@ -31,8 +31,6 @@ env_init();
 require_once(COREPATH.'Common.php');
 
 /* SESSIONS ------------------------------------------- */
-// Handled in Redis
-Predis\Autoloader::register();
 $redis = new Predis\Client();
 
 require_once(COREPATH.'libraries/Session.php');
@@ -45,20 +43,6 @@ session_start();
 
 /* COOKIES ------------------------------------------- */
 require_once (COREPATH.'libraries/Cookie.php');
-
-/* CSRF PROTECTION ------------------------------------------- */
-require_once(COREPATH.'libraries/Csrf.php');
-
-/* AUTH ------------------------------------------- */
-require_once (COREPATH.'libraries/Auth.php');
-
-/* HASHID ------------------------------------------- */
-require_once(COREPATH.'libraries/hashid/HashGenerator.php');
-require_once(COREPATH.'libraries/hashid/Hashid.php');
-$hashid = new Hashids\Hashids();
-
-/* GITHUB OAUTH ------------------------------------------- */
-require_once(COREPATH.'libraries/GitHubOAuth.php');
 
 /* GITHUB API ------------------------------------------- */
 require_once(COREPATH.'libraries/GitHubAPI.php');

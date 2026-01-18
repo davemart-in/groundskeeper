@@ -7,14 +7,6 @@
  */
 class Repository {
     private $db;
-    public $id;
-    public $owner;
-    public $name;
-    public $full_name;
-    public $bug_label;
-    public $last_synced_at;
-    public $created_at;
-    public $updated_at;
 
     /**
      * Constructor
@@ -31,10 +23,6 @@ class Repository {
     public function findAll() {
         $sql = "SELECT * FROM repositories ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql);
-
-        if (empty($rows)) {
-            return [];
-        }
 
         return array_map(function($row) {
             return $this->rowToArray($row);

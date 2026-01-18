@@ -109,7 +109,7 @@ if ($segment1 === 'add-repo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         // Auto-detect bug label from GitHub
-        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $githubToken = $user?->github_access_token ?: null;
         $githubApi = new GitHubAPI($githubToken);
         $bugLabel = Repository::detectBugLabel($parsed['owner'], $parsed['name'], $githubApi);
 
@@ -187,7 +187,7 @@ if (is_numeric($segment1) && $segment2 === 'sync' && $_SERVER['REQUEST_METHOD'] 
     }
 
     try {
-        $githubToken = ($user && !empty($user->github_access_token)) ? $user->github_access_token : null;
+        $githubToken = $user?->github_access_token ?: null;
         $githubApi = new GitHubAPI($githubToken);
         $bugLabel = Repository::detectBugLabel($repo['owner'], $repo['name'], $githubApi);
 

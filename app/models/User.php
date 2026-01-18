@@ -216,13 +216,4 @@ class User {
             'updated_at' => $this->updated_at
         ];
     }
-
-    /**
-     * Check if user is in read-write mode
-     *
-     * @return bool
-     */
-    public function isReadWrite() {
-        return $this->access_mode === 'readwrite';
-    }
 }

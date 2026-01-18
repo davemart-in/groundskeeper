@@ -290,72 +290,6 @@ function analyzeStats($issues) {
 }
 
 /**
- * Detect duplicate issues
- *
- * @param array $issues Array of issues
- * @return array Duplicate detection results
- */
-function analyzeDuplicates($issues) {
-    // TODO: Implement actual duplicate detection logic
-    // For now, return static data
-    return [
-        'count' => 72,
-        'groups' => [
-            [
-                'primary' => [
-                    'id' => 45123,
-                    'number' => 1234,
-                    'title' => 'Product page crashes on mobile Safari',
-                    'url' => 'https://github.com/woocommerce/woocommerce/issues/1234',
-                    'created_at' => time() - (86400 * 30),
-                    'comments' => 15,
-                    'reactions' => 23
-                ],
-                'duplicates' => [
-                    [
-                        'id' => 45156,
-                        'number' => 1256,
-                        'title' => 'Mobile product page not working on iOS',
-                        'url' => 'https://github.com/woocommerce/woocommerce/issues/1256',
-                        'similarity' => 0.92,
-                        'created_at' => time() - (86400 * 25)
-                    ],
-                    [
-                        'id' => 45189,
-                        'number' => 1289,
-                        'title' => 'Safari crashes when viewing products',
-                        'url' => 'https://github.com/woocommerce/woocommerce/issues/1289',
-                        'similarity' => 0.87,
-                        'created_at' => time() - (86400 * 20)
-                    ]
-                ]
-            ],
-            [
-                'primary' => [
-                    'id' => 45234,
-                    'number' => 1345,
-                    'title' => 'Checkout button not responding',
-                    'url' => 'https://github.com/woocommerce/woocommerce/issues/1345',
-                    'created_at' => time() - (86400 * 40),
-                    'comments' => 8,
-                    'reactions' => 12
-                ],
-                'duplicates' => [
-                    [
-                        'id' => 45267,
-                        'number' => 1378,
-                        'title' => 'Cannot complete checkout process',
-                        'url' => 'https://github.com/woocommerce/woocommerce/issues/1378',
-                        'similarity' => 0.89,
-                        'created_at' => time() - (86400 * 35)
-                    ]
-                ]
-            ]
-        ]
-    ];
-}
-
-/**
  * Detect issues missing information
  *
  * @param array $issues Array of issues
@@ -905,98 +839,6 @@ function analyzeIssueChunk($repoId, $chunk, $areas) {
 }
 
 /**
- * Analyze all issues using OpenAI GPT-4o-mini
- *
- * @param int $repoId Repository ID
- * @param array $issues Array of issues
- * @param array $areas Array of areas
- * @return bool Success status
- */
-function analyzeAllIssues($repoId, $issues, $areas) {
-    $openai = new OpenAIAPI();
-    $issueModel = new Issue();
-    $repoModel = new Repository();
-
-    // Get repository for label context
-    $repo = $repoModel->findById($repoId);
-    if (!$repo) {
-        return false;
-    }
-
-    // Get all labels from repo
-    $githubToken = null; // TODO: Get from user if available
-    $githubApi = new GitHubAPI($githubToken);
-    $repoLabels = [];
-    try {
-        $labels = $githubApi->getLabels($repo['owner'], $repo['name']);
-        if ($labels) {
-            $repoLabels = array_column($labels, 'name');
-        }
-    } catch (Exception $e) {
-        error_log('Failed to fetch labels: ' . $e->getMessage());
-    }
-
-    // Batch process issues
-    $batchSize = 25;
-    $batches = array_chunk($issues, $batchSize);
-
-    foreach ($batches as $index => $batch) {
-        $batchNum = $index + 1;
-        $totalBatches = count($batches);
-
-        // Analyze batch with retry logic
-        $maxRetries = 3;
-        $analysisResults = false;
-        for ($retry = 0; $retry < $maxRetries; $retry++) {
-            $analysisResults = analyzeIssueBatch($batch, $areas, $repoLabels, $openai);
-            if ($analysisResults) break;
-
-            if ($retry < $maxRetries - 1) {
-                sleep(pow(2, $retry) * 10);
-            }
-        }
-
-        if (!$analysisResults) {
-            error_log("Issue analysis: Failed batch $batchNum after $maxRetries attempts");
-            continue;
-        }
-
-        // Generate embeddings for summaries
-        $summaries = array_column($analysisResults, 'summary');
-        $embeddings = generateEmbeddings($summaries, $openai);
-
-        // Save results to database
-        foreach ($analysisResults as $i => $analysis) {
-            $issueId = $analysis['issue_id'];
-            $data = [
-                'is_high_signal' => $analysis['is_high_signal'],
-                'is_cleanup_candidate' => $analysis['is_cleanup_candidate'],
-                'is_missing_context' => $analysis['is_missing_context'],
-                'missing_elements' => $analysis['missing_elements'],
-                'is_missing_labels' => $analysis['is_missing_labels'],
-                'suggested_labels' => $analysis['suggested_labels'],
-                'summary' => $analysis['summary'],
-                'embedding' => $embeddings[$i] ?? null
-            ];
-
-            $issueModel->updateAnalysis($issueId, $data);
-
-            // Update area if provided
-            if (isset($analysis['proposed_area_id'])) {
-                $issueModel->updateArea($issueId, $analysis['proposed_area_id']);
-            }
-        }
-
-        // Delay between batches
-        if ($batchNum < $totalBatches) {
-            sleep(5);
-        }
-    }
-
-    return true;
-}
-
-/**
  * Sanitize text for safe JSON encoding
  *
  * @param string $text Text to sanitize
@@ -1236,12 +1078,12 @@ function findDuplicates($repoId) {
             $similarity = cosineSimilarity($embedding1, $embedding2);
 
             if ($similarity >= $threshold) {
-                // Categorize by confidence level
+                // Categorize by confidence level (check highest first)
                 $confidence = 'medium';
-                if ($similarity >= 0.85) {
-                    $confidence = 'high';
-                } else if ($similarity >= 0.90) {
+                if ($similarity >= 0.90) {
                     $confidence = 'very_high';
+                } else if ($similarity >= 0.85) {
+                    $confidence = 'high';
                 }
 
                 $similarIssues[] = [

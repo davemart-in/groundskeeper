@@ -66,35 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_GET['confirm'])) {
 }
 
 // Perform deletion
-$db = Database::getInstance();
-
 try {
-    // Set a busy timeout for SQLite (10 seconds)
-    $db->getPDO()->exec("PRAGMA busy_timeout = 10000");
-
-    // Enable error logging
-    error_log("Reset: Starting deletion for repo ID: $repoId");
-
-    // Use direct SQL for faster deletion with no foreign key checks (re-enable after)
-    $db->getPDO()->exec("PRAGMA foreign_keys = OFF");
-
-    error_log("Reset: Deleting issues...");
-    $db->execute("DELETE FROM issues WHERE repository_id = ?", [$repoId]);
-
-    error_log("Reset: Deleting areas...");
-    $db->execute("DELETE FROM areas WHERE repository_id = ?", [$repoId]);
-
-    error_log("Reset: Deleting analysis_jobs...");
-    $db->execute("DELETE FROM analysis_jobs WHERE repository_id = ?", [$repoId]);
-
-    $db->getPDO()->exec("PRAGMA foreign_keys = ON");
-
-    error_log("Reset: Deletion complete");
+    // Delete all related data using model methods
+    $issueModel->deleteByRepository($repoId);
+    $areaModel->deleteByRepository($repoId);
+    $jobModel->deleteByRepository($repoId);
 
     // Reset repository last_audited_at timestamp
-    error_log("Reset: Clearing last_audited_at for repo ID: $repoId");
-    $result = $repoModel->update($repoId, ['last_audited_at' => null]);
-    error_log("Reset: Update result: " . ($result ? 'success' : 'failed'));
+    $repoModel->update($repoId, ['last_audited_at' => null]);
 
     // Clear session data
     unset($_SESSION['analysis_results']);

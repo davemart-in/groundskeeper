@@ -103,10 +103,6 @@ class Issue {
         $sql = "SELECT * FROM issues WHERE repository_id = ? ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql, [$repositoryId]);
 
-        if (empty($rows)) {
-            return [];
-        }
-
         return array_map(function($row) {
             return $this->rowToArray($row);
         }, $rows);
@@ -253,10 +249,6 @@ class Issue {
         $sql = "SELECT * FROM issues WHERE repository_id = ? AND analyzed_at IS NULL ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql, [$repositoryId]);
 
-        if (empty($rows)) {
-            return [];
-        }
-
         return array_map(function($row) {
             return $this->rowToArray($row);
         }, $rows);
@@ -271,10 +263,6 @@ class Issue {
     public function findNeedingAnalysis($repositoryId) {
         $sql = "SELECT * FROM issues WHERE repository_id = ? AND (analyzed_at IS NULL OR analyzed_at < updated_at) ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql, [$repositoryId]);
-
-        if (empty($rows)) {
-            return [];
-        }
 
         return array_map(function($row) {
             return $this->rowToArray($row);
@@ -291,9 +279,161 @@ class Issue {
         $sql = "SELECT * FROM issues WHERE repository_id = ? AND embedding IS NOT NULL ORDER BY created_at DESC";
         $rows = $this->db->fetchAll($sql, [$repositoryId]);
 
-        if (empty($rows)) {
-            return [];
+        return array_map(function($row) {
+            return $this->rowToArray($row);
+        }, $rows);
+    }
+
+    /**
+     * Count total issues for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return int Count
+     */
+    public function countByRepository($repositoryId) {
+        $sql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ?";
+        $result = $this->db->fetch($sql, [$repositoryId]);
+        return $result['count'] ?? 0;
+    }
+
+    /**
+     * Count high signal issues for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return int Count
+     */
+    public function countHighSignal($repositoryId) {
+        $sql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_high_signal = 1";
+        $result = $this->db->fetch($sql, [$repositoryId]);
+        return $result['count'] ?? 0;
+    }
+
+    /**
+     * Count cleanup candidate issues for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return int Count
+     */
+    public function countCleanupCandidates($repositoryId) {
+        $sql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_cleanup_candidate = 1";
+        $result = $this->db->fetch($sql, [$repositoryId]);
+        return $result['count'] ?? 0;
+    }
+
+    /**
+     * Count issues missing context for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return int Count
+     */
+    public function countMissingContext($repositoryId) {
+        $sql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_missing_context = 1";
+        $result = $this->db->fetch($sql, [$repositoryId]);
+        return $result['count'] ?? 0;
+    }
+
+    /**
+     * Count issues missing labels for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @return int Count
+     */
+    public function countMissingLabels($repositoryId) {
+        $sql = "SELECT COUNT(*) as count FROM issues WHERE repository_id = ? AND is_missing_labels = 1 AND suggested_labels IS NOT NULL";
+        $result = $this->db->fetch($sql, [$repositoryId]);
+        return $result['count'] ?? 0;
+    }
+
+    /**
+     * Find high signal issues for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @param int|null $areaId Optional area filter
+     * @return array Array of issues
+     */
+    public function findHighSignal($repositoryId, $areaId = null) {
+        $sql = "SELECT * FROM issues WHERE repository_id = ? AND is_high_signal = 1";
+        $params = [$repositoryId];
+
+        if ($areaId) {
+            $sql .= " AND area_id = ?";
+            $params[] = $areaId;
         }
+
+        $sql .= " ORDER BY created_at DESC";
+        $rows = $this->db->fetchAll($sql, $params);
+
+        return array_map(function($row) {
+            return $this->rowToArray($row);
+        }, $rows);
+    }
+
+    /**
+     * Find cleanup candidate issues for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @param int|null $areaId Optional area filter
+     * @return array Array of issues
+     */
+    public function findCleanupCandidates($repositoryId, $areaId = null) {
+        $sql = "SELECT * FROM issues WHERE repository_id = ? AND is_cleanup_candidate = 1";
+        $params = [$repositoryId];
+
+        if ($areaId) {
+            $sql .= " AND area_id = ?";
+            $params[] = $areaId;
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+        $rows = $this->db->fetchAll($sql, $params);
+
+        return array_map(function($row) {
+            return $this->rowToArray($row);
+        }, $rows);
+    }
+
+    /**
+     * Find issues missing context for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @param int|null $areaId Optional area filter
+     * @return array Array of issues
+     */
+    public function findMissingContext($repositoryId, $areaId = null) {
+        $sql = "SELECT * FROM issues WHERE repository_id = ? AND is_missing_context = 1";
+        $params = [$repositoryId];
+
+        if ($areaId) {
+            $sql .= " AND area_id = ?";
+            $params[] = $areaId;
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+        $rows = $this->db->fetchAll($sql, $params);
+
+        return array_map(function($row) {
+            return $this->rowToArray($row);
+        }, $rows);
+    }
+
+    /**
+     * Find issues missing labels for a repository
+     *
+     * @param int $repositoryId Repository ID
+     * @param int|null $areaId Optional area filter
+     * @return array Array of issues
+     */
+    public function findMissingLabels($repositoryId, $areaId = null) {
+        $sql = "SELECT * FROM issues WHERE repository_id = ? AND is_missing_labels = 1 AND suggested_labels IS NOT NULL";
+        $params = [$repositoryId];
+
+        if ($areaId) {
+            $sql .= " AND area_id = ?";
+            $params[] = $areaId;
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+        $rows = $this->db->fetchAll($sql, $params);
 
         return array_map(function($row) {
             return $this->rowToArray($row);

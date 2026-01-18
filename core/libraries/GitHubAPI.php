@@ -134,17 +134,6 @@ class GitHubAPI {
     }
 
     /**
-     * Get repository information
-     *
-     * @param string $owner Repository owner
-     * @param string $repo Repository name
-     * @return array|false Repository data or false on failure
-     */
-    public function getRepository($owner, $repo) {
-        return $this->get("/repos/{$owner}/{$repo}");
-    }
-
-    /**
      * Get authenticated user (requires token)
      *
      * @return array|false User data or false on failure
@@ -155,27 +144,6 @@ class GitHubAPI {
         }
 
         return $this->get('/user');
-    }
-
-    /**
-     * Get rate limit status
-     *
-     * @return array|false Rate limit data or false on failure
-     */
-    public function getRateLimit() {
-        return $this->get('/rate_limit');
-    }
-
-    /**
-     * Check if a repository is accessible
-     *
-     * @param string $owner Repository owner
-     * @param string $repo Repository name
-     * @return bool True if accessible, false otherwise
-     */
-    public function isRepositoryAccessible($owner, $repo) {
-        $repoData = $this->getRepository($owner, $repo);
-        return $repoData !== false;
     }
 
     /**
