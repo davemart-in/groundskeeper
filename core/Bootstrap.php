@@ -41,9 +41,6 @@ require_once (COREPATH.'libraries/Cookie.php');
 /* GITHUB API ------------------------------------------- */
 require_once(COREPATH.'libraries/GitHubAPI.php');
 
-/* CLAUDE API ------------------------------------------- */
-require_once(COREPATH.'libraries/ClaudeAPI.php');
-
 /* OPENAI API ------------------------------------------- */
 require_once(COREPATH.'libraries/OpenAIAPI.php');
 

@@ -16,8 +16,7 @@ Groundskeeper syncs your GitHub repository's bug issues and uses AI to analyze t
 ## Requirements
 
 - PHP 8.0+ (with SQLite support - usually enabled by default)
-- GitHub OAuth App credentials
-- Claude API key (Anthropic)
+- GitHub Personal Access Token
 - OpenAI API key
 
 That's it! No additional dependencies needed.
@@ -37,12 +36,13 @@ That's it! No additional dependencies needed.
    GITHUB_CLIENT_ID=your_github_oauth_client_id
    GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
    ENCRYPTION_KEY=your_base64_encryption_key
-   CLAUDE_API_KEY=your_claude_api_key
    OPENAI_API_KEY=your_openai_api_key
    ```
 
-   **GitHub OAuth App Setup:**
-   - Create a GitHub OAuth App at https://github.com/settings/developers
+   **GitHub Personal Access Token Setup:**
+   - Create a token at https://github.com/settings/tokens
+   - Required scopes: `repo` (for private repos) or `public_repo` (for public repos only)
+   - The app uses OAuth flow, so you'll need to create a GitHub OAuth App at https://github.com/settings/developers
    - Set Authorization callback URL to: `http://your-domain/oauth/callback`
    - Copy the Client ID and Client Secret to your `.env` file
 
@@ -97,14 +97,14 @@ That's it! No additional dependencies needed.
 ## How It Works
 
 1. **Sync Phase** - Fetches open issues with your configured bug label from GitHub
-2. **Area Discovery** - AI analyzes issue titles/descriptions to suggest functional areas
+2. **Area Discovery** - GPT-4o-mini analyzes issue titles/descriptions to suggest functional areas
 3. **Analysis Phase** - Processes issues in batches (5 at a time) with GPT-4o-mini:
    - Categorizes by functional area
    - Flags high-signal issues (impact, urgency, engagement)
    - Identifies cleanup candidates
    - Detects missing information
    - Suggests relevant labels
-4. **Duplicate Detection** - Uses OpenAI embeddings to find semantically similar issues
+4. **Duplicate Detection** - Uses OpenAI text-embedding-3-small to find semantically similar issues
 5. **Results** - Stores analysis per repository for fast dashboard loading
 
 ## Multi-Repository Support
@@ -119,10 +119,9 @@ Groundskeeper supports multiple repositories:
 
 - **Backend**: PHP 8 with custom lightweight framework (zero dependencies!)
 - **Database**: SQLite (for data and sessions)
-- **AI Models**:
-  - Claude (Anthropic) for area discovery
-  - GPT-4o-mini (OpenAI) for issue analysis
-  - text-embedding-3-small (OpenAI) for duplicate detection
+- **AI**: OpenAI only
+  - GPT-4o-mini for area discovery and issue analysis
+  - text-embedding-3-small for duplicate detection
 - **Frontend**: Vanilla JavaScript, Tailwind-inspired CSS
 
 ## License
