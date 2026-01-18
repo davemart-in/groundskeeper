@@ -59,6 +59,7 @@ require_once(APPPATH.'models/Repository.php');
 require_once(APPPATH.'models/Issue.php');
 require_once(APPPATH.'models/Area.php');
 require_once(APPPATH.'models/AnalysisJob.php');
+require_once(APPPATH.'models/AnalysisResult.php');
 
 /* ROUTER ------------------------------------------- */
 require_once(COREPATH.'libraries/Router.php');

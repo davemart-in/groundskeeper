@@ -96,3 +96,13 @@ CREATE TABLE IF NOT EXISTS analysis_jobs (
 
 CREATE INDEX IF NOT EXISTS idx_analysis_job_repository ON analysis_jobs(repository_id);
 CREATE INDEX IF NOT EXISTS idx_analysis_job_status ON analysis_jobs(status);
+
+CREATE TABLE IF NOT EXISTS analysis_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repository_id INTEGER NOT NULL,
+    duplicates TEXT,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (repository_id) REFERENCES repositories(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_analysis_results_repository ON analysis_results(repository_id);

@@ -653,6 +653,14 @@ window.GRNDSKPR.Dashboard = (function() {
     }
 
     /**
+     * Switch to a different repository
+     */
+    function switchRepository(repoId) {
+        // Redirect to dashboard with repo parameter
+        window.location.href = window.GRNDSKPR_CONFIG.baseUrl + '?repo=' + repoId;
+    }
+
+    /**
      * Initialize dashboard functionality
      */
     function init() {
@@ -663,6 +671,7 @@ window.GRNDSKPR.Dashboard = (function() {
     return {
         init: init,
         switchTab: switchTab,
+        switchRepository: switchRepository,
         openModal: openModal,
         closeModal: closeModal,
         toggleSelectAll: toggleSelectAll,

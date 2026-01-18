@@ -174,7 +174,10 @@ if ($segment1 === 'process-chunk' && is_numeric($segment2) && $_SERVER['REQUEST_
             set_time_limit(300); // 5 minutes for final analysis
             $allIssues = $issueModel->findByRepository($job['repository_id']);
             $results = runAnalysis($job['repository_id'], $allIssues);
-            $_SESSION['analysis_results'] = $results;
+
+            // Store results in database instead of session
+            $analysisResultModel = new AnalysisResult();
+            $analysisResultModel->save($job['repository_id'], $results['duplicates'] ?? []);
 
             echo json_encode([
                 'success' => true,

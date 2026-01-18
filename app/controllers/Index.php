@@ -7,7 +7,32 @@ $glob['user'] = $user ? $user->toArray() : null;
 /* LOAD REPOSITORIES ---- */
 $repoModel = new Repository();
 $glob['repositories'] = $repoModel->findAll();
-$glob['selected_repo'] = !empty($glob['repositories']) ? $glob['repositories'][0] : null;
+
+// Determine selected repository (priority: URL param > session > first repo)
+$selectedRepoId = null;
+if (isset($_GET['repo']) && is_numeric($_GET['repo'])) {
+	$selectedRepoId = (int)$_GET['repo'];
+	$_SESSION['selected_repo_id'] = $selectedRepoId;
+} elseif (isset($_SESSION['selected_repo_id'])) {
+	$selectedRepoId = $_SESSION['selected_repo_id'];
+}
+
+// Find the selected repository
+$glob['selected_repo'] = null;
+if ($selectedRepoId) {
+	foreach ($glob['repositories'] as $repo) {
+		if ($repo['id'] == $selectedRepoId) {
+			$glob['selected_repo'] = $repo;
+			break;
+		}
+	}
+}
+
+// Fallback to first repo if selected repo not found
+if (!$glob['selected_repo'] && !empty($glob['repositories'])) {
+	$glob['selected_repo'] = $glob['repositories'][0];
+	$_SESSION['selected_repo_id'] = $glob['selected_repo']['id'];
+}
 
 /* LOAD ISSUE COUNTS FOR SELECTED REPO ---- */
 if ($glob['selected_repo']) {
@@ -26,7 +51,15 @@ if ($glob['selected_repo']) {
 	$glob['cleanup_count'] = $issueModel->countCleanupCandidates($repoId);
 	$glob['missing_info_count'] = $issueModel->countMissingContext($repoId);
 	$glob['suggestions_count'] = $issueModel->countMissingLabels($repoId);
-	$glob['duplicates_count'] = count($_SESSION['analysis_results']['duplicates'] ?? []);
+
+	// Get duplicates count from database
+	$analysisResultModel = new AnalysisResult();
+	$analysisResults = $analysisResultModel->findByRepository($repoId);
+	$glob['duplicates_count'] = count($analysisResults['duplicates'] ?? []);
+
+	// Check if priority labels are configured (priority_labels is stored as JSON)
+	$priorityLabels = json_decode($glob['selected_repo']['priority_labels'] ?? '[]', true);
+	$hasPriorityLabels = !empty($priorityLabels);
 } else {
 	$glob['total_issues'] = 0;
 	$glob['area_stats'] = [];
@@ -35,23 +68,35 @@ if ($glob['selected_repo']) {
 	$glob['missing_info_count'] = 0;
 	$glob['suggestions_count'] = 0;
 	$glob['duplicates_count'] = 0;
+	$hasPriorityLabels = false;
 }
 
-/* LOAD ANALYSIS RESULTS ---- */
-$glob['analysis'] = $_SESSION['analysis_results'] ?? null;
+/* LOAD ANALYSIS RESULTS (kept for backward compatibility but not used) ---- */
+$glob['analysis'] = null;
 
-/* LOAD DUPLICATES ---- */
-$glob['duplicates'] = $_SESSION['analysis_results']['duplicates'] ?? [];
+/* LOAD DUPLICATES (no longer needed in controller, loaded via API) ---- */
+$glob['duplicates'] = [];
 
 /* LOAD PENDING AREAS ---- */
-// Clear pending areas if areas already exist for this repo
+// Only show pending areas if they're for the currently selected repo
 if (isset($_SESSION['pending_areas']) && $glob['selected_repo']) {
-    $existingAreas = $areaModel->findByRepository($glob['selected_repo']['id']);
-    if (!empty($existingAreas)) {
-        unset($_SESSION['pending_areas']);
+    $pendingRepoId = $_SESSION['pending_areas']['repo_id'] ?? null;
+    if ($pendingRepoId == $glob['selected_repo']['id']) {
+        // Check if areas now exist (maybe user approved them elsewhere)
+        $existingAreas = $areaModel->findByRepository($glob['selected_repo']['id']);
+        if (!empty($existingAreas)) {
+            unset($_SESSION['pending_areas']);
+            $glob['pending_areas'] = null;
+        } else {
+            $glob['pending_areas'] = $_SESSION['pending_areas'];
+        }
+    } else {
+        // Pending areas are for a different repo, don't show them
+        $glob['pending_areas'] = null;
     }
+} else {
+    $glob['pending_areas'] = null;
 }
-$glob['pending_areas'] = $_SESSION['pending_areas'] ?? null;
 
 /* LOAD VIEW ---- */
 if (isset($glob['view'])) {

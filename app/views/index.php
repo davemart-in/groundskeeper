@@ -48,9 +48,9 @@
                 <div class="dashboard-controls__repo-section">
                     <label class="dashboard-controls__label">Repository</label>
                     <?php if (!empty($glob['repositories'])): ?>
-                        <select class="dashboard-controls__select">
+                        <select id="repo-selector" class="dashboard-controls__select" onchange="GRNDSKPR.Dashboard.switchRepository(this.value)">
                             <?php foreach ($glob['repositories'] as $repo): ?>
-                                <option value="<?php echo $repo['id']; ?>"><?php echo htmlspecialchars($repo['full_name']); ?></option>
+                                <option value="<?php echo $repo['id']; ?>" <?php echo (isset($glob['selected_repo']) && $glob['selected_repo']['id'] == $repo['id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($repo['full_name']); ?></option>
                             <?php endforeach; ?>
                         </select>
                     <?php else: ?>

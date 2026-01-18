@@ -73,13 +73,15 @@ function handleStats() {
 	}
 
 	$issueModel = new Issue();
+	$analysisResultModel = new AnalysisResult();
+	$analysisResults = $analysisResultModel->findByRepository($repoId);
 
 	echo json_encode([
 		'success' => true,
 		'data' => [
 			'total' => $issueModel->countByRepository($repoId),
 			'high_signal' => $issueModel->countHighSignal($repoId),
-			'duplicates' => count($_SESSION['analysis_results']['duplicates'] ?? []),
+			'duplicates' => count($analysisResults['duplicates'] ?? []),
 			'cleanup' => $issueModel->countCleanupCandidates($repoId),
 			'missing_info' => $issueModel->countMissingContext($repoId),
 			'suggestions' => $issueModel->countMissingLabels($repoId)
@@ -133,10 +135,22 @@ function handleHighSignal() {
  * Get duplicate issues
  */
 function handleDuplicates() {
+	$repoId = $_GET['repo_id'] ?? null;
 	$areaId = $_GET['area_id'] ?? null;
 
-	// Get duplicates from session
-	$allDuplicates = $_SESSION['analysis_results']['duplicates'] ?? [];
+	if (!$repoId) {
+		http_response_code(400);
+		echo json_encode([
+			'success' => false,
+			'error' => 'Repository ID required'
+		]);
+		exit;
+	}
+
+	// Get duplicates from database
+	$analysisResultModel = new AnalysisResult();
+	$analysisResults = $analysisResultModel->findByRepository($repoId);
+	$allDuplicates = $analysisResults['duplicates'] ?? [];
 
 	// Filter by area if specified
 	if ($areaId) {
