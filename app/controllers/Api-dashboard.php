@@ -48,6 +48,10 @@ switch ($action) {
 		handleSuggestions();
 		break;
 
+	case 'all-issues':
+		handleAllIssues();
+		break;
+
 	default:
 		http_response_code(404);
 		echo json_encode([
@@ -246,5 +250,29 @@ function handleSuggestions() {
 	echo json_encode([
 		'success' => true,
 		'data' => $issueModel->findMissingLabels($repoId, $areaId)
+	]);
+}
+
+/**
+ * Get all issues for a repository (optionally filtered by area)
+ */
+function handleAllIssues() {
+	$repoId = $_GET['repo_id'] ?? null;
+	$areaId = $_GET['area_id'] ?? null;
+
+	if (!$repoId) {
+		http_response_code(400);
+		echo json_encode([
+			'success' => false,
+			'error' => 'Repository ID required'
+		]);
+		exit;
+	}
+
+	$issueModel = new Issue();
+
+	echo json_encode([
+		'success' => true,
+		'data' => $issueModel->findAllByArea($repoId, $areaId)
 	]);
 }

@@ -110,6 +110,22 @@
                         <?php endif; ?>
                     </div>
 
+                    <!-- Stat Card: Area Total (shown when area is filtered) -->
+                    <div id="area-total-card" class="action-card action-card--all-issues hidden">
+                        <div class="action-card__content">
+                            <div class="action-card__icon action-card__icon--all-issues">
+                                <i class="fa-solid fa-list"></i>
+                            </div>
+                            <div class="action-card__text">
+                                <h4 class="action-card__title"><span id="area-total-count">0</span> <span id="area-total-label">All Issues in Area</span></h4>
+                                <p class="action-card__description">View all issues in this area</p>
+                            </div>
+                        </div>
+                        <button onclick="GRNDSKPR.Dashboard.openModal('all-issues')" class="action-card__button">
+                            View Issues
+                        </button>
+                    </div>
+
                     <!-- Action Card: Missing Priority Labels -->
                     <div class="action-card action-card--high-signal">
                         <div class="action-card__content">
@@ -694,6 +710,70 @@
         </div>
     </div>
 
+    <!-- MODAL: All Issues in Area -->
+    <div id="modal-all-issues" class="modal hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="modal__backdrop"></div>
+
+        <!-- Fixed wrapper for centering -->
+        <div class="modal__wrapper" onclick="GRNDSKPR.Dashboard.closeModal('all-issues')">
+            <div class="modal__container">
+
+                <!-- Modal Panel -->
+                <div class="modal__panel modal__panel--large" onclick="event.stopPropagation()">
+
+                    <!-- Modal Header -->
+                    <div class="modal__header">
+                        <div class="modal__header-content">
+                            <h3 class="modal__title">All Issues</h3>
+                            <p class="modal__description"><span id="all-issues-count">0</span> issues in this area.</p>
+                        </div>
+                        <button onclick="GRNDSKPR.Dashboard.closeModal('all-issues')" class="modal__close-btn">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Bulk Actions Toolbar -->
+                    <div class="modal__toolbar">
+                        <div class="modal__toolbar-left">
+                            <label class="modal__select-all-label">
+                                <input type="checkbox" id="select-all-all-issues" onchange="GRNDSKPR.Dashboard.toggleSelectAll('all-issues')" class="modal__select-all-checkbox">
+                                <span class="modal__select-all-text">Select All</span>
+                            </label>
+                            <span id="selected-count-all-issues" class="modal__selected-count">0 selected</span>
+                        </div>
+                        <div class="modal__toolbar-right">
+                            <button onclick="GRNDSKPR.Dashboard.copySelectedIssueUrls('all-issues')" class="modal__action-btn modal__action-btn--secondary">
+                                <i class="fa-solid fa-copy"></i>
+                                Copy Issue URLs
+                            </button>
+                            <button onclick="GRNDSKPR.Dashboard.openSelectedIssueUrls('all-issues')" class="modal__action-btn">
+                                <i class="fa-solid fa-up-right-from-square"></i>
+                                Open in Tabs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- List Content -->
+                    <div class="modal__content">
+                        <table class="modal__table">
+                            <thead class="modal__table-head">
+                                <tr>
+                                    <th scope="col" class="modal__table-header modal__table-header--checkbox"></th>
+                                    <th scope="col" class="modal__table-header">Issue</th>
+                                    <th scope="col" class="modal__table-header">Labels</th>
+                                    <th scope="col" class="modal__table-header">Engagement</th>
+                                    <th scope="col" class="modal__table-header modal__table-header--actions"><span class="sr-only">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-all-issues" class="modal__table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 	<script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-utility.js"></script>
     <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-app.js"></script>
     <script type="text/javascript" src="<?php echo BASEURL; ?>js/groundskeeper-sync.js"></script>
@@ -1039,6 +1119,56 @@
             </td>
             <td class="modal__table-cell modal__table-cell--nowrap modal__table-cell--right">
                 <a href="<%= url %>" target="_blank" class="text-emerald-600 hover:text-emerald-800 font-medium">View</a>
+            </td>
+        </tr>
+    </script>
+
+    <!-- Template: All Issues Row -->
+    <!-- Variables: title, url, issue_number, timeText, labels, reactions_total, comments_count -->
+    <script type="text/template" id="tmpl-all-issues-row">
+        <tr class="modal__table-row">
+            <td class="modal__table-cell modal__table-cell--nowrap">
+                <input type="checkbox" class="modal__select-all-checkbox" onchange="GRNDSKPR.Dashboard.updateSelectedCount(&#39;all-issues&#39;)">
+            </td>
+            <td class="modal__table-cell">
+                <div class="text-sm font-medium text-slate-900"><%- title %></div>
+                <div class="text-xs text-slate-500">
+                    <a href="<%= url %>" target="_blank" class="text-slate-500 hover:text-emerald-600 hover:underline">#<%= issue_number %> <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>
+                    • opened <%= timeText %>
+                </div>
+            </td>
+            <td class="modal__table-cell">
+                <div class="flex flex-wrap gap-1.5">
+                    <% if (labels && labels.length > 0) { %>
+                        <% labels.slice(0, 3).forEach(function(label) { %>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                                <%= label %>
+                            </span>
+                        <% }); %>
+                        <% if (labels.length > 3) { %>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-500">
+                                +<%= labels.length - 3 %>
+                            </span>
+                        <% } %>
+                    <% } else { %>
+                        <span class="text-xs text-slate-400 italic">No labels</span>
+                    <% } %>
+                </div>
+            </td>
+            <td class="modal__table-cell modal__table-cell--nowrap">
+                <div class="flex items-center gap-3 text-sm text-slate-600">
+                    <span class="flex items-center gap-1" title="Reactions">
+                        <i class="fa-solid fa-heart text-slate-400 text-xs"></i>
+                        <%= reactions_total %>
+                    </span>
+                    <span class="flex items-center gap-1" title="Comments">
+                        <i class="fa-solid fa-comment text-slate-400 text-xs"></i>
+                        <%= comments_count %>
+                    </span>
+                </div>
+            </td>
+            <td class="modal__table-cell modal__table-cell--nowrap modal__table-cell--right">
+                <a href="<%= url %>" target="_blank" class="text-emerald-600 hover:text-emerald-900 font-medium">View</a>
             </td>
         </tr>
     </script>

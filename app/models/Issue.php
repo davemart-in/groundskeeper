@@ -542,4 +542,28 @@ class Issue {
             return $this->rowToArray($row);
         }, $rows);
     }
+
+    /**
+     * Find all issues for a repository, optionally filtered by area
+     *
+     * @param int $repositoryId Repository ID
+     * @param int|null $areaId Optional area filter
+     * @return array Array of issues
+     */
+    public function findAllByArea($repositoryId, $areaId = null) {
+        $sql = "SELECT * FROM issues WHERE repository_id = ?";
+        $params = [$repositoryId];
+
+        if ($areaId) {
+            $sql .= " AND area_id = ?";
+            $params[] = $areaId;
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+        $rows = $this->db->fetchAll($sql, $params);
+
+        return array_map(function($row) {
+            return $this->rowToArray($row);
+        }, $rows);
+    }
 }

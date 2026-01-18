@@ -504,6 +504,10 @@
 	border-left-color: #a78bfa;
 }
 
+.action-card--all-issues {
+	border-left-color: #10b981;
+}
+
 .action-card__inner {
 	display: flex;
 	justify-content: space-between;
@@ -553,6 +557,11 @@
 .action-card__icon--suggestions {
 	background: #ede9fe;
 	color: #7c3aed;
+}
+
+.action-card__icon--all-issues {
+	background: #d1fae5;
+	color: #059669;
 }
 
 .action-card__title {

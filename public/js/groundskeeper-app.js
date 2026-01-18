@@ -116,6 +116,10 @@ window.GRNDSKPR.Dashboard = (function() {
                 templateId = 'tmpl-suggestions-row';
                 tbodyId = 'tbody-suggestions';
                 break;
+            case 'all-issues':
+                templateId = 'tmpl-all-issues-row';
+                tbodyId = 'tbody-all-issues';
+                break;
             default:
                 console.error('Unknown modal type:', modalId);
                 return;
@@ -230,6 +234,10 @@ window.GRNDSKPR.Dashboard = (function() {
             data.currentLabels = parseLabels(issue.labels);
             data.suggestedLabels = parseLabels(issue.suggested_labels);
             data.reasoning = (issue.label_reasoning || 'Recommended based on issue content').substring(0, 50);
+        } else if (modalId === 'all-issues') {
+            data.labels = parseLabels(issue.labels);
+            data.reactions_total = issue.reactions_total || 0;
+            data.comments_count = issue.comments_count || 0;
         }
 
         return data;
@@ -363,7 +371,19 @@ window.GRNDSKPR.Dashboard = (function() {
      * Open a modal
      */
     function openModal(modalId) {
-        document.getElementById(`modal-${modalId}`).classList.remove('hidden');
+        const modal = document.getElementById(`modal-${modalId}`);
+        modal.classList.remove('hidden');
+
+        // Update modal title and count for all-issues
+        if (modalId === 'all-issues') {
+            const areaName = window.GRNDSKPR_CURRENT_AREA_NAME || 'Area';
+            const count = window.GRNDSKPR_CURRENT_AREA_COUNT || 0;
+
+            modal.querySelector('.modal__title').textContent = `All ${areaName} Issues`;
+            modal.querySelector('.modal__description').innerHTML =
+                `<span id="all-issues-count">${count}</span> issues in ${areaName} area.`;
+        }
+
         // Render content when opening
         renderModalTable(modalId, currentAreaFilter);
     }
@@ -577,15 +597,14 @@ window.GRNDSKPR.Dashboard = (function() {
      * Filter dashboard by area
      */
     function filterDashboard(areaName, count, areaId) {
-        // Store current filter
+        // Store current filter context
         currentAreaFilter = areaId;
-
-        // Clear cache since we're filtering by area
+        window.GRNDSKPR_CURRENT_AREA_NAME = areaName;
+        window.GRNDSKPR_CURRENT_AREA_COUNT = count;
         window.GRNDSKPR_CACHE = {};
 
-        // Update Header
-        const header = document.getElementById('analysis-header');
-        header.innerHTML = `
+        // Update header with breadcrumb
+        document.getElementById('analysis-header').innerHTML = `
             <button onclick="GRNDSKPR.Dashboard.resetDashboard()" class="findings-header__back-btn">
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
@@ -594,19 +613,16 @@ window.GRNDSKPR.Dashboard = (function() {
             <h3 class="text-lg font-bold text-emerald-700">${areaName}</h3>
         `;
 
-        // Remove selected state from all area rows
+        // Show and populate area total card
+        document.getElementById('area-total-card').classList.remove('hidden');
+        document.getElementById('area-total-count').textContent = count;
+        document.getElementById('area-total-label').textContent = `All Issues in ${areaName}`;
+        document.getElementById('stat-total').textContent = count;
+
+        // Update area row selection
         document.querySelectorAll('.area-row').forEach(row => {
-            row.classList.remove('area-table__row--selected');
+            row.classList.toggle('area-table__row--selected', row.dataset.areaId == areaId);
         });
-
-        // Add selected state to clicked row
-        const selectedRow = document.querySelector(`.area-row[data-area-id="${areaId}"]`);
-        if (selectedRow) {
-            selectedRow.classList.add('area-table__row--selected');
-        }
-
-        // Update total stat
-        document.getElementById('stat-total').innerText = count;
 
         // Fetch and update filtered stats from API
         updateFilteredStats(areaId);
@@ -639,17 +655,18 @@ window.GRNDSKPR.Dashboard = (function() {
      * Reset dashboard to show all data
      */
     function resetDashboard() {
-        // Clear filter
+        // Clear filter context
         currentAreaFilter = null;
-
-        // Clear cache
+        window.GRNDSKPR_CURRENT_AREA_NAME = null;
+        window.GRNDSKPR_CURRENT_AREA_COUNT = null;
         window.GRNDSKPR_CACHE = {};
 
-        // Restore Header
-        const header = document.getElementById('analysis-header');
-        header.innerHTML = `<h3 class="text-lg font-bold text-slate-900">Analysis Findings</h3>`;
+        // Hide area total card and restore header
+        document.getElementById('area-total-card')?.classList.add('hidden');
+        document.getElementById('analysis-header').innerHTML =
+            `<h3 class="text-lg font-bold text-slate-900">Analysis Findings</h3>`;
 
-        // Remove selected state from all area rows
+        // Remove all area row selections
         document.querySelectorAll('.area-row').forEach(row => {
             row.classList.remove('area-table__row--selected');
         });
